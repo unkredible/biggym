@@ -1,0 +1,54 @@
+# =============================================================================
+# Per-tenant docker-compose stack.
+#
+# Brought up by setup-tenant.sh after .env has been generated in
+# active_apps/tenant_<id>_<name>/. Variables come from the sibling .env file.
+#
+# Networking:
+#   - Joins the external `reverse-proxy-network` so nginx-proxy can reach it.
+#   - Sets VIRTUAL_HOST and LETSENCRYPT_HOST so nginx-proxy + acme-companion
+#     route traffic and issue an SSL certificate automatically.
+#
+# Storage:
+#   - Bind-mounts /var/www/apps/tenant_<id>_<name>/storage into /app/storage.
+#     The directory lives on the VM disk and survives container rebuilds.
+# =============================================================================
+
+networks:
+  reverse-proxy-network:
+    external: true
+
+services:
+  tenant-app:
+    # Built from ../../template by setup-tenant.sh on first deploy.
+    image: ${TENANT_IMAGE:-unkredible/tenant-app:latest}
+    container_name: app_tenant_${TENANT_ID}_${TENANT_NAME}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # nginx-proxy + acme-companion control variables. They are derived from
+      # TENANT_NAME / BASE_DOMAIN so they cannot drift from the .env values.
+      VIRTUAL_HOST: ${TENANT_NAME}.${BASE_DOMAIN}
+      VIRTUAL_PORT: "3000"
+      LETSENCRYPT_HOST: ${TENANT_NAME}.${BASE_DOMAIN}
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+    volumes:
+      - /var/www/apps/tenant_${TENANT_ID}_${TENANT_NAME}/storage:/app/storage
+    networks:
+      - reverse-proxy-network
+    # Soft memory cap — keeps a runaway tenant from eating the whole VM.
+    # Tune per-tenant by overriding in active_apps/tenant_<id>_<name>/docker-compose.override.yml.
+    mem_limit: 512m
+    mem_reservation: 128m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s

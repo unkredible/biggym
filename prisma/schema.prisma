@@ -1,0 +1,294 @@
+// =============================================================================
+// biggym — gym-management SaaS schema.
+//
+// One deployment serves many gyms. Each gym is a "Gym" row (the internal
+// tenant). Tenant isolation is enforced in application code: every query is
+// scoped by gymId derived from the signed-in user's Membership. (The whole
+// biggym deployment already has its own isolated Postgres database provided by
+// the unkredible platform; this internal tenant layer separates gyms inside it.)
+// =============================================================================
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Auth.js (NextAuth) — magic-link + Google + email/password (Credentials).
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  emailVerified DateTime?
+  // Set only for email/password (Credentials) logins. scrypt hash.
+  passwordHash  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts   Account[]
+  sessions   Session[]
+  membership Membership?
+
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ---------------------------------------------------------------------------
+// Tenancy: gyms + staff/client memberships.
+// ---------------------------------------------------------------------------
+
+enum GymStatus {
+  trial
+  active
+  suspended
+}
+
+enum MemberRole {
+  super_admin // platform owner (you)
+  gym_admin
+  reception
+  trainer
+  client
+}
+
+model Gym {
+  id           String    @id @default(cuid())
+  name         String
+  slug         String    @unique
+  status       GymStatus @default(trial)
+  contactEmail String?
+  appName      String?
+  primaryColor String    @default("#11221f")
+  accentColor  String    @default("#f6c65b")
+  logoUrl      String?
+
+  // Stripe (subscription bought from the portal).
+  stripeCustomerId     String? @unique
+  stripeSubscriptionId String? @unique
+  plan                 String?
+  subscriptionStatus   String  @default("none")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships Membership[]
+  clients     Client[]
+  exercises   ExerciseLibrary[]
+  programs    WorkoutProgram[]
+
+  @@index([slug])
+}
+
+model Membership {
+  id        String     @id @default(cuid())
+  gymId     String
+  gym       Gym        @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      MemberRole
+  fullName  String
+  email     String
+  active    Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  assignedClients Client[]         @relation("TrainerClients")
+  programs        WorkoutProgram[]
+  events          ClientEvent[]
+
+  @@index([gymId])
+}
+
+// ---------------------------------------------------------------------------
+// Clients + workout domain (ported from gym-manager).
+// ---------------------------------------------------------------------------
+
+enum ClientStatus {
+  lead
+  consents
+  anamnesis
+  assigned
+  active
+}
+
+model Client {
+  id                String       @id @default(cuid())
+  gymId             String
+  gym               Gym          @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  fullName          String
+  email             String?
+  phone             String?
+  birthDate         DateTime?
+  fiscalCode        String?
+  addressLine       String?
+  city              String?
+  emergencyName     String?
+  emergencyPhone    String?
+  onboardingStatus  ClientStatus @default(lead)
+  assignedTrainerId String?
+  assignedTrainer   Membership?  @relation("TrainerClients", fields: [assignedTrainerId], references: [id], onDelete: SetNull)
+
+  subscriptionPlan   String?
+  subscriptionStatus String    @default("none")
+  subscriptionStart  DateTime?
+  subscriptionEnd    DateTime?
+
+  termsConsentAt     DateTime?
+  healthConsentAt    DateTime?
+  marketingConsentAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  programs WorkoutProgram[]
+  events   ClientEvent[]
+  logs     WorkoutLog[]
+
+  @@index([gymId])
+  @@index([gymId, onboardingStatus])
+}
+
+model ExerciseLibrary {
+  id           String   @id @default(cuid())
+  gymId        String?
+  gym          Gym?     @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  name         String
+  muscleGroup  String
+  equipment    String?
+  instructions String?
+  videoUrl     String?
+  createdAt    DateTime @default(now())
+
+  @@index([gymId])
+}
+
+enum ProgramStatus {
+  draft
+  active
+  archived
+}
+
+model WorkoutProgram {
+  id        String         @id @default(cuid())
+  gymId     String
+  gym       Gym            @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  clientId  String
+  client    Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  trainerId String?
+  trainer   Membership?    @relation(fields: [trainerId], references: [id], onDelete: SetNull)
+  title     String
+  goal      String?
+  status    ProgramStatus  @default(draft)
+  startsOn  DateTime?
+  endsOn    DateTime?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  days WorkoutDay[]
+
+  @@index([gymId, clientId])
+}
+
+model WorkoutDay {
+  id        String         @id @default(cuid())
+  programId String
+  program   WorkoutProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  title     String
+  dayOrder  Int            @default(1)
+  notes     String?
+
+  exercises WorkoutExercise[]
+}
+
+model WorkoutExercise {
+  id            String     @id @default(cuid())
+  workoutDayId  String
+  workoutDay    WorkoutDay @relation(fields: [workoutDayId], references: [id], onDelete: Cascade)
+  exerciseName  String
+  exerciseOrder Int        @default(1)
+  targetSets    Int        @default(3)
+  targetReps    String     @default("8-10")
+  targetLoad    String?
+  rpeTarget     Float?
+  restSeconds   Int?
+  notes         String?
+}
+
+model WorkoutLog {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  performedAt DateTime @default(now())
+  loadKg      Float?
+  reps        Int?
+  rpe         Float?
+  note        String?
+  createdAt   DateTime @default(now())
+
+  @@index([clientId, performedAt])
+}
+
+model ClientEvent {
+  id        String      @id @default(cuid())
+  clientId  String
+  client    Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    Membership? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  eventType String      @default("note")
+  body      String
+  createdAt DateTime    @default(now())
+
+  @@index([clientId, createdAt])
+}
+
+model StripeEvent {
+  id          String   @id // Stripe event id (evt_…)
+  type        String
+  processedAt DateTime @default(now())
+
+  @@index([type])
+}
