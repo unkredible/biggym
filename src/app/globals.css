@@ -36,10 +36,11 @@ h1 { margin: 0 0 0.4rem; }
   background: var(--card); border: 1px solid var(--border);
   border-radius: 12px; padding: 1rem 1.25rem; margin: 0.75rem 0;
 }
-input, button {
+input, button, select {
   font: inherit; padding: 0.55rem 0.8rem; border-radius: 8px;
   border: 1px solid var(--border); background: var(--card); color: var(--fg);
 }
+input[type="color"] { padding: 0.1rem; width: 44px; height: 38px; }
 button { cursor: pointer; }
 button.primary { background: var(--accent); color: #fff; border: 0; }
 @media (prefers-color-scheme: dark) {

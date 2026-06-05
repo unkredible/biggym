@@ -54,13 +54,21 @@ export default async function DashboardPage() {
           {isStaffRole(membership.role) && (
             <div className="card">
               <h3>Manage</h3>
-              <p>
+              <div className="row" style={{ gap: "1rem" }}>
                 <a href="/clients">Clients →</a>
-              </p>
+                {membership.role === "gym_admin" && <a href="/staff">Staff →</a>}
+                {membership.role === "gym_admin" && (
+                  <a href="/settings">Settings →</a>
+                )}
+              </div>
             </div>
           )}
         </>
       )}
+
+      <div className="card">
+        <a href="/account">Account &amp; password →</a>
+      </div>
     </main>
   );
 }

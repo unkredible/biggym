@@ -124,6 +124,7 @@ model Gym {
   exercises    ExerciseLibrary[]
   programs     WorkoutProgram[]
   invites      ClientInvite[]
+  staffInvites StaffInvite[]
   activations  BillableActivation[]
 
   @@index([slug])
@@ -312,6 +313,23 @@ model PlatformConfig {
   clientUnitPriceCents Int      @default(50) // €0.50 per activated client
   currency             String   @default("eur")
   updatedAt            DateTime @updatedAt
+}
+
+// Pending email invitation for a staff member to join a gym with a role.
+model StaffInvite {
+  id         String     @id @default(cuid())
+  gymId      String
+  gym        Gym        @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  email      String
+  role       MemberRole
+  fullName   String?
+  token      String     @unique
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime   @default(now())
+
+  @@index([gymId])
+  @@index([token])
 }
 
 // Pending email invitation for a client to confirm enrolment.
