@@ -85,9 +85,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = (token.uid as string) ?? "";
-        session.user.gymId = (token.gymId as string | null) ?? null;
-        session.user.role = (token.role as string | null) ?? null;
+        const uid = (token.uid as string) ?? "";
+        session.user.id = uid;
+        // Resolve membership fresh each session read so a gym/role assigned
+        // after sign-in (e.g. right after subscribing) shows up without a
+        // re-login. Falls back to the token's cached values.
+        let gymId = (token.gymId as string | null) ?? null;
+        let role = (token.role as string | null) ?? null;
+        if (uid && !gymId) {
+          const m = await prisma.membership.findUnique({
+            where: { userId: uid },
+            select: { gymId: true, role: true },
+          });
+          if (m) {
+            gymId = m.gymId;
+            role = m.role;
+          }
+        }
+        session.user.gymId = gymId;
+        session.user.role = role;
       }
       return session;
     },
