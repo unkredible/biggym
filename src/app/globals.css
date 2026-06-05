@@ -43,6 +43,7 @@ input, button, select {
 input[type="color"] { padding: 0.1rem; width: 44px; height: 38px; }
 button { cursor: pointer; }
 button.primary { background: var(--accent); color: #fff; border: 0; }
+button.danger { border-color: #dc2626; color: #dc2626; background: transparent; }
 @media (prefers-color-scheme: dark) {
   button.primary { background: var(--accent2); color: #11221f; }
 }

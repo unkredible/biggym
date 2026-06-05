@@ -137,7 +137,9 @@ export default function ClientList() {
         clients.map((c) => (
           <div className="card" key={c.id}>
             <div className="row spread">
-              <strong>{c.fullName}</strong>
+              <a href={`/clients/${c.id}`}>
+                <strong>{c.fullName}</strong>
+              </a>
               <span className="badge">{c.onboardingStatus}</span>
             </div>
             <p className="muted" style={{ margin: "0.3rem 0 0" }}>

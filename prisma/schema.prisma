@@ -36,6 +36,7 @@ model User {
   accounts   Account[]
   sessions   Session[]
   membership Membership?
+  client     Client?
 
   @@index([email])
 }
@@ -166,6 +167,8 @@ model Client {
   id                String       @id @default(cuid())
   gymId             String
   gym               Gym          @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  userId            String?      @unique
+  user              User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
   fullName          String
   email             String?
   phone             String?

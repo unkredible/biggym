@@ -46,6 +46,33 @@ export async function POST(req: NextRequest) {
   // Activate + record exactly one billable unit.
   await recordActivation(invite.gymId, client.id);
 
+  // Give the client a login: a User + a client Membership, linked to the
+  // Client record, so they can sign in and see their own workouts.
+  const user = await prisma.user.upsert({
+    where: { email: invite.email },
+    create: { email: invite.email, name: fullName },
+    update: {},
+  });
+  const existingMembership = await prisma.membership.findUnique({
+    where: { userId: user.id },
+  });
+  if (!existingMembership) {
+    await prisma.membership.create({
+      data: {
+        gymId: invite.gymId,
+        userId: user.id,
+        role: "client",
+        fullName,
+        email: invite.email,
+      },
+    });
+  }
+  if (!client.userId) {
+    await prisma.client
+      .update({ where: { id: client.id }, data: { userId: user.id } })
+      .catch(() => {/* userId may already be linked to another client */});
+  }
+
   await prisma.clientInvite.update({
     where: { id: invite.id },
     data: { acceptedAt: new Date(), clientId: client.id },

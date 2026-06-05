@@ -115,3 +115,12 @@ export async function currentContext() {
 export function isStaffRole(role: string | null | undefined): boolean {
   return !!role && STAFF_ROLES.has(role);
 }
+
+/** Resolve the Client record for a signed-in client user (or null). */
+export async function currentClient() {
+  const ctx = await currentContext();
+  if (!ctx?.userId || !ctx.gymId) return null;
+  return prisma.client.findFirst({
+    where: { userId: ctx.userId, gymId: ctx.gymId },
+  });
+}

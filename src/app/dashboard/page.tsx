@@ -63,6 +63,13 @@ export default async function DashboardPage() {
               </div>
             </div>
           )}
+
+          {membership.role === "client" && (
+            <div className="card">
+              <h3>Training</h3>
+              <a href="/my/workouts">My workouts →</a>
+            </div>
+          )}
         </>
       )}
 
