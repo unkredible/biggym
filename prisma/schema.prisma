@@ -115,10 +115,12 @@ model Gym {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  memberships Membership[]
-  clients     Client[]
-  exercises   ExerciseLibrary[]
-  programs    WorkoutProgram[]
+  memberships  Membership[]
+  clients      Client[]
+  exercises    ExerciseLibrary[]
+  programs     WorkoutProgram[]
+  invites      ClientInvite[]
+  activations  BillableActivation[]
 
   @@index([slug])
 }
@@ -169,6 +171,7 @@ model Client {
   emergencyName     String?
   emergencyPhone    String?
   onboardingStatus  ClientStatus @default(lead)
+  activatedAt       DateTime?
   assignedTrainerId String?
   assignedTrainer   Membership?  @relation("TrainerClients", fields: [assignedTrainerId], references: [id], onDelete: SetNull)
 
@@ -184,9 +187,10 @@ model Client {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  programs WorkoutProgram[]
-  events   ClientEvent[]
-  logs     WorkoutLog[]
+  programs    WorkoutProgram[]
+  events      ClientEvent[]
+  logs        WorkoutLog[]
+  activations BillableActivation[]
 
   @@index([gymId])
   @@index([gymId, onboardingStatus])
@@ -291,4 +295,53 @@ model StripeEvent {
   processedAt DateTime @default(now())
 
   @@index([type])
+}
+
+// ---------------------------------------------------------------------------
+// Billing: platform charges each gym per ACTIVATED client, aggregated into one
+// Stripe invoice per month (never per-client micro-charges).
+// ---------------------------------------------------------------------------
+
+// Single-row platform configuration (id = "singleton").
+model PlatformConfig {
+  id                   String   @id @default("singleton")
+  clientUnitPriceCents Int      @default(50) // €0.50 per activated client
+  currency             String   @default("eur")
+  updatedAt            DateTime @updatedAt
+}
+
+// Pending email invitation for a client to confirm enrolment.
+model ClientInvite {
+  id         String    @id @default(cuid())
+  gymId      String
+  gym        Gym       @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  email      String
+  fullName   String?
+  token      String    @unique
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  clientId   String?
+  createdAt  DateTime  @default(now())
+
+  @@index([gymId])
+  @@index([token])
+}
+
+// One row per client activation = one billable unit. Aggregated monthly.
+model BillableActivation {
+  id                  String    @id @default(cuid())
+  gymId               String
+  gym                 Gym       @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  clientId            String
+  client              Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  unitPriceCents      Int // rate snapshot at activation time
+  currency            String    @default("eur")
+  periodMonth         String // "YYYY-MM" the activation belongs to
+  billedAt            DateTime?
+  stripeInvoiceItemId String?
+  createdAt           DateTime  @default(now())
+
+  @@unique([clientId]) // a client is billed once
+  @@index([gymId, periodMonth])
+  @@index([billedAt])
 }

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/db";
 import { isStaffRole } from "@/lib/gym";
+import { isSuperAdmin } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -18,14 +19,17 @@ export default async function DashboardPage() {
     <main>
       <div className="row spread">
         <h1>Dashboard</h1>
-        <form
-          action={async () => {
-            "use server";
-            await signOut({ redirectTo: "/login" });
-          }}
-        >
-          <button type="submit">Sign out</button>
-        </form>
+        <div className="row">
+          {isSuperAdmin(session.user.role) && <a href="/admin">Platform admin</a>}
+          <form
+            action={async () => {
+              "use server";
+              await signOut({ redirectTo: "/login" });
+            }}
+          >
+            <button type="submit">Sign out</button>
+          </form>
+        </div>
       </div>
 
       {!membership ? (

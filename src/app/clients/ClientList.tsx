@@ -30,6 +30,9 @@ export default function ClientList() {
     load();
   }, [load]);
 
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteMsg, setInviteMsg] = useState("");
+
   async function create(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -48,6 +51,24 @@ export default function ClientList() {
     } else {
       setError(data.error ?? "Failed.");
     }
+    setBusy(false);
+  }
+
+  async function invite(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setInviteMsg("");
+    const res = await fetch("/api/clients/invite", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: inviteEmail }),
+    });
+    setInviteMsg(
+      res.ok
+        ? `Invite sent to ${inviteEmail}. They become active (billable) on confirm.`
+        : (await res.json()).error ?? "Failed.",
+    );
+    if (res.ok) setInviteEmail("");
     setBusy(false);
   }
 
@@ -81,6 +102,31 @@ export default function ClientList() {
           </button>
         </div>
         {error && <p style={{ color: "crimson" }}>{error}</p>}
+      </form>
+
+      <form onSubmit={invite} className="card">
+        <strong>Invite client by email</strong>
+        <p className="muted" style={{ margin: "0.2rem 0 0.6rem" }}>
+          They confirm via email; only confirmed clients are billed.
+        </p>
+        <div className="row" style={{ gap: "0.5rem" }}>
+          <input
+            type="email"
+            placeholder="client@email.com"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            required
+            style={{ flex: 2 }}
+          />
+          <button disabled={busy} type="submit">
+            Send invite
+          </button>
+        </div>
+        {inviteMsg && (
+          <p className="muted" style={{ margin: "0.5rem 0 0" }}>
+            {inviteMsg}
+          </p>
+        )}
       </form>
 
       {loading ? (

@@ -102,6 +102,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             role = m.role;
           }
         }
+        // Platform owners (SUPERADMIN_EMAILS) always get the super_admin role,
+        // regardless of any gym membership.
+        const supers = (process.env.SUPERADMIN_EMAILS ?? "")
+          .toLowerCase()
+          .split(/[,\s]+/)
+          .filter(Boolean);
+        if (session.user.email && supers.includes(session.user.email.toLowerCase())) {
+          role = "super_admin";
+        }
+
         session.user.gymId = gymId;
         session.user.role = role;
       }
