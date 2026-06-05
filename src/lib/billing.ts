@@ -37,6 +37,26 @@ export async function setClientUnitPrice(cents: number) {
   });
 }
 
+/** Set or clear a single gym's per-client rate override (null = platform default). */
+export async function setGymUnitPrice(gymId: string, cents: number | null) {
+  if (cents !== null && (!Number.isInteger(cents) || cents < 0 || cents > 100000)) {
+    throw new Error("Invalid price");
+  }
+  return prisma.gym.update({
+    where: { id: gymId },
+    data: { clientUnitPriceCents: cents },
+  });
+}
+
+/** The effective rate for a gym = its override, else the platform default. */
+export async function effectiveRateCents(gym: {
+  clientUnitPriceCents: number | null;
+}): Promise<number> {
+  if (gym.clientUnitPriceCents != null) return gym.clientUnitPriceCents;
+  const cfg = await getPlatformConfig();
+  return cfg.clientUnitPriceCents;
+}
+
 /**
  * Mark a client active and record exactly one billable activation (idempotent
  * on clientId). Returns true if a new activation was recorded.
@@ -57,11 +77,17 @@ export async function recordActivation(
   if (existing) return false;
 
   const cfg = await getPlatformConfig();
+  const gym = await prisma.gym.findUnique({
+    where: { id: gymId },
+    select: { clientUnitPriceCents: true },
+  });
+  const rate = gym?.clientUnitPriceCents ?? cfg.clientUnitPriceCents;
+
   await prisma.billableActivation.create({
     data: {
       gymId,
       clientId,
-      unitPriceCents: cfg.clientUnitPriceCents,
+      unitPriceCents: rate,
       currency: cfg.currency,
       periodMonth: currentPeriod(),
     },

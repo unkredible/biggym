@@ -3,6 +3,7 @@ import { requireSuperAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { getPlatformConfig, currentPeriod } from "@/lib/billing";
 import AdminControls from "./AdminControls";
+import GymRateForm from "./GymRateForm";
 
 export const dynamic = "force-dynamic";
 
@@ -84,8 +85,18 @@ export default async function AdminPage() {
               {u?._count._all ?? 0} ({eur(u?._sum.unitPriceCents ?? 0)})
             </p>
             <p className="muted" style={{ margin: "0.2rem 0 0" }}>
-              stripe customer: <code>{g.stripeCustomerId ?? "—"}</code>
+              rate:{" "}
+              <strong>
+                {eur(g.clientUnitPriceCents ?? cfg.clientUnitPriceCents)}
+              </strong>{" "}
+              {g.clientUnitPriceCents == null ? "(platform default)" : "(custom)"}{" "}
+              · stripe customer: <code>{g.stripeCustomerId ?? "—"}</code>
             </p>
+            <GymRateForm
+              gymId={g.id}
+              overrideCents={g.clientUnitPriceCents}
+              defaultCents={cfg.clientUnitPriceCents}
+            />
           </div>
         );
       })}

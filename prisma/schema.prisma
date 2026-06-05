@@ -106,6 +106,10 @@ model Gym {
   accentColor  String    @default("#f6c65b")
   logoUrl      String?
 
+  // Per-gym override of the per-activated-client rate (cents). Null = use the
+  // platform default in PlatformConfig.
+  clientUnitPriceCents Int?
+
   // Stripe (subscription bought from the portal).
   stripeCustomerId     String? @unique
   stripeSubscriptionId String? @unique
