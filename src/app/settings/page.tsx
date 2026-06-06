@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { currentContext } from "@/lib/gym";
 import { prisma } from "@/lib/db";
-import BrandingForm from "./BrandingForm";
+import SettingsForm from "./SettingsForm";
 
 export const dynamic = "force-dynamic";
 
@@ -12,13 +12,7 @@ export default async function SettingsPage() {
 
   const gym = await prisma.gym.findUnique({
     where: { id: ctx.gymId },
-    select: {
-      name: true,
-      appName: true,
-      primaryColor: true,
-      accentColor: true,
-      logoUrl: true,
-    },
+    select: { name: true, appName: true, theme: true, themeMode: true, logoUrl: true },
   });
   if (!gym) redirect("/dashboard");
 
@@ -28,12 +22,12 @@ export default async function SettingsPage() {
         <h1>Settings</h1>
         <a href="/dashboard">← dashboard</a>
       </div>
-      <p className="muted">Branding for {gym.name}&apos;s app.</p>
-      <BrandingForm
+      <p className="muted">Brand the app for {gym.name}.</p>
+      <SettingsForm
         appName={gym.appName ?? ""}
-        primaryColor={gym.primaryColor}
-        accentColor={gym.accentColor}
-        logoUrl={gym.logoUrl ?? ""}
+        theme={gym.theme}
+        themeMode={gym.themeMode}
+        logoUrl={gym.logoUrl}
       />
     </main>
   );

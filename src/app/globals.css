@@ -1,62 +1,142 @@
+/* =========================================================================
+   biggym app theme. Bold, rounded, vibrant-accent UI with 5 colour presets
+   and light/dark modes. Theme is applied on <html data-theme data-mode>.
+   ========================================================================= */
+
 :root {
-  color-scheme: light dark;
-  --fg: #111;
-  --bg: #fafafa;
-  --card: #fff;
-  --border: #e3e3e3;
-  --accent: #11221f;
-  --accent2: #f6c65b;
-  --muted: #666;
+  --radius: 22px;
+  --radius-sm: 14px;
+  --maxw: 880px;
+
+  /* Dark mode surfaces (default) */
+  --bg: #0e1622;
+  --surface: #18222f;
+  --surface-2: #212d3d;
+  --fg: #f2f5f8;
+  --muted: #93a2b6;
+  --border: rgba(255, 255, 255, 0.09);
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --err: #f87171;
+}
+
+[data-mode="light"] {
+  --bg: #f4f1ea;
+  --surface: #ffffff;
+  --surface-2: #efeadf;
+  --fg: #14181d;
+  --muted: #677083;
+  --border: rgba(0, 0, 0, 0.08);
+  --shadow: 0 8px 28px rgba(20, 24, 29, 0.08);
   --err: #dc2626;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --fg: #f5f5f5;
-    --bg: #0b0d0c;
-    --card: #161918;
-    --border: #2a2e2c;
-    --muted: #9aa3a0;
-  }
-}
+
+/* ---- 5 colour presets (accent + ink + soft tint) ---------------------- */
+:root,
+[data-theme="emerald"] { --accent: #a8e80c; --accent-ink: #10240a; --accent-soft: rgba(168,232,12,0.16); }
+[data-theme="crimson"] { --accent: #fb5a4b; --accent-ink: #2a0907; --accent-soft: rgba(251,90,75,0.16); }
+[data-theme="ocean"]   { --accent: #3b82f6; --accent-ink: #04132e; --accent-soft: rgba(59,130,246,0.16); }
+[data-theme="sunset"]  { --accent: #ff8a3d; --accent-ink: #2a1303; --accent-soft: rgba(255,138,61,0.16); }
+[data-theme="violet"]  { --accent: #8b5cf6; --accent-ink: #1a0b34; --accent-soft: rgba(139,92,246,0.18); }
+
 * { box-sizing: border-box; }
+
 html, body {
-  margin: 0; padding: 0; color: var(--fg); background: var(--bg);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
-a { color: var(--accent2); text-decoration: none; }
-@media (prefers-color-scheme: light) { a { color: #b8860b; } }
-a:hover { text-decoration: underline; }
-main { max-width: 820px; margin: 0 auto; padding: 2.5rem 1.5rem; }
-h1 { margin: 0 0 0.4rem; }
+
+main { max-width: var(--maxw); margin: 0 auto; padding: 1.5rem 1.1rem 4rem; }
+
+h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; margin: 0 0 0.3rem; }
+h2 { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; margin: 1.6rem 0 0.6rem; }
+h3 { font-size: 1.05rem; font-weight: 700; margin: 0 0 0.4rem; }
+
+a { color: var(--accent); text-decoration: none; font-weight: 600; }
+a:hover { opacity: 0.85; }
+
 .muted { color: var(--muted); font-size: 0.92rem; }
-.row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+
+.row { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
 .spread { justify-content: space-between; }
+
 .card {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 12px; padding: 1rem 1.25rem; margin: 0.75rem 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.25rem;
+  margin: 0.85rem 0;
+  box-shadow: var(--shadow);
 }
-input, button, select {
-  font: inherit; padding: 0.55rem 0.8rem; border-radius: 8px;
-  border: 1px solid var(--border); background: var(--card); color: var(--fg);
+
+/* highlight card uses the accent fill (like the mockups' coloured tiles) */
+.card.accent { background: var(--accent); color: var(--accent-ink); border: 0; }
+.card.accent .muted { color: var(--accent-ink); opacity: 0.7; }
+
+input, select, textarea {
+  font: inherit;
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--fg);
+  outline: none;
 }
-input[type="color"] { padding: 0.1rem; width: 44px; height: 38px; }
-button { cursor: pointer; }
-button.primary { background: var(--accent); color: #fff; border: 0; }
-button.danger { border-color: #dc2626; color: #dc2626; background: transparent; }
-@media (prefers-color-scheme: dark) {
-  button.primary { background: var(--accent2); color: #11221f; }
+input:focus, select:focus { border-color: var(--accent); }
+input[type="color"] { padding: 0.15rem; width: 46px; height: 40px; }
+
+button, .btn {
+  font: inherit;
+  font-weight: 700;
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--fg);
+  cursor: pointer;
+  transition: transform 0.05s ease, opacity 0.15s ease;
 }
+button:hover { opacity: 0.9; }
+button:active { transform: translateY(1px); }
+button.primary { background: var(--accent); color: var(--accent-ink); border: 0; }
+button.danger { background: transparent; color: var(--err); border-color: var(--err); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
+
 code {
-  background: rgba(127,127,127,0.16); padding: 0.1rem 0.35rem;
-  border-radius: 5px; font-family: ui-monospace, Menlo, monospace; font-size: 0.88em;
+  background: var(--surface-2);
+  padding: 0.12rem 0.4rem;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
   word-break: break-all;
 }
-ul { padding-left: 1.1rem; }
-li { margin: 0.2rem 0; }
+
 .badge {
-  font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 999px;
-  border: 1px solid var(--border); color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  text-transform: lowercase;
 }
-label { font-size: 0.85rem; color: var(--muted); }
+
+ul { padding-left: 1.1rem; }
+li { margin: 0.25rem 0; }
+label { font-size: 0.82rem; color: var(--muted); font-weight: 600; }
+table { width: 100%; border-collapse: collapse; }
+
+/* ---- app header (logo + name) ----------------------------------------- */
+.appbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.8rem; max-width: var(--maxw); margin: 0 auto;
+  padding: 1rem 1.1rem 0;
+}
+.brandrow { display: flex; align-items: center; gap: 0.6rem; }
+.brandrow img { height: 30px; width: auto; border-radius: 8px; }
+.brandname { font-weight: 800; letter-spacing: -0.02em; font-size: 1.15rem; }
+.brandname .dot { color: var(--accent); }

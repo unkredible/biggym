@@ -10,20 +10,43 @@ export const metadata: Metadata = {
   description: "Gym management made simple — clients, workout programs, billing.",
 };
 
-/** Resolve the signed-in user's gym branding (app host only). */
-async function getBrand() {
+interface Brand {
+  appName: string | null;
+  theme: string;
+  themeMode: string;
+  logoUrl: string | null;
+  onApp: boolean;
+}
+
+async function getBrand(): Promise<Brand> {
+  const defaults: Brand = {
+    appName: null,
+    theme: "emerald",
+    themeMode: "dark",
+    logoUrl: null,
+    onApp: false,
+  };
   try {
     const host = headers().get("host");
-    if (!isAppHost(host)) return null;
+    const onApp = isAppHost(host);
+    if (!onApp) return defaults;
     const session = await auth();
     const gymId = session?.user?.gymId;
-    if (!gymId) return null;
-    return prisma.gym.findUnique({
+    if (!gymId) return { ...defaults, onApp };
+    const gym = await prisma.gym.findUnique({
       where: { id: gymId },
-      select: { appName: true, primaryColor: true, accentColor: true },
+      select: { appName: true, theme: true, themeMode: true, logoUrl: true },
     });
+    if (!gym) return { ...defaults, onApp };
+    return {
+      appName: gym.appName,
+      theme: gym.theme,
+      themeMode: gym.themeMode,
+      logoUrl: gym.logoUrl,
+      onApp,
+    };
   } catch {
-    return null;
+    return defaults;
   }
 }
 
@@ -35,13 +58,27 @@ export default async function RootLayout({
   const brand = await getBrand();
 
   return (
-    <html lang="en">
-      <head>
-        {brand && (
-          <style>{`:root{--accent:${brand.primaryColor};--accent2:${brand.accentColor};}`}</style>
+    <html lang="en" data-theme={brand.theme} data-mode={brand.themeMode}>
+      <body>
+        {brand.onApp && (
+          <div className="appbar">
+            <a href="/dashboard" className="brandrow">
+              {brand.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={brand.logoUrl} alt={brand.appName ?? "logo"} />
+              ) : null}
+              <span className="brandname">
+                {brand.appName ?? (
+                  <>
+                    big<span className="dot">gym</span>
+                  </>
+                )}
+              </span>
+            </a>
+          </div>
         )}
-      </head>
-      <body>{children}</body>
+        {children}
+      </body>
     </html>
   );
 }

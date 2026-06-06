@@ -103,7 +103,10 @@ model Gym {
   status       GymStatus @default(trial)
   contactEmail String?
   appName      String?
-  primaryColor String    @default("#11221f")
+  // Visual theme: one of the 5 presets + light/dark mode + optional logo.
+  theme        String    @default("emerald") // emerald | crimson | ocean | sunset | violet
+  themeMode    String    @default("dark")    // light | dark
+  primaryColor String    @default("#11221f") // legacy, kept for compatibility
   accentColor  String    @default("#f6c65b")
   logoUrl      String?
 
