@@ -30,7 +30,11 @@ if [ -d "./prisma/migrations" ] && [ -n "$(ls -A ./prisma/migrations 2>/dev/null
   $PRISMA migrate deploy
 else
   echo "[entrypoint] no migrations found — running 'prisma db push' to sync schema"
-  $PRISMA db push --skip-generate
+  # biggym evolves its schema via db push and carries no production data worth
+  # protecting yet, so accept the (non-destructive here) data-loss warnings —
+  # e.g. adding a unique index on Client.userId. Switch to real migrations
+  # before there is irreplaceable data.
+  $PRISMA db push --skip-generate --accept-data-loss
 fi
 
 echo "[entrypoint] starting Next.js server on :${PORT:-3000}"
