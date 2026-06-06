@@ -109,6 +109,7 @@ model Gym {
   primaryColor String    @default("#11221f") // legacy, kept for compatibility
   accentColor  String    @default("#f6c65b")
   logoUrl      String?
+  bannerUrl    String?
 
   // Per-gym override of the per-activated-client rate (cents). Null = use the
   // platform default in PlatformConfig.
@@ -130,8 +131,23 @@ model Gym {
   invites      ClientInvite[]
   staffInvites StaffInvite[]
   activations  BillableActivation[]
+  locations    GymLocation[]
 
   @@index([slug])
+}
+
+model GymLocation {
+  id          String   @id @default(cuid())
+  gymId       String
+  gym         Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  name        String
+  addressLine String
+  city        String?
+  phone       String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([gymId])
 }
 
 model Membership {

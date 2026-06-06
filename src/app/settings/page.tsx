@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { isSuperAdmin } from "@/lib/admin";
 import SettingsForm from "./SettingsForm";
 import PasswordForm from "./PasswordForm";
+import LocationsManager from "./LocationsManager";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,10 @@ export default async function SettingsPage() {
       where: { userId: session.user.id },
       include: {
         gym: {
-          select: { name: true, appName: true, theme: true, themeMode: true, logoUrl: true },
+          select: {
+            name: true, appName: true, theme: true, themeMode: true,
+            logoUrl: true, bannerUrl: true,
+          },
         },
       },
     }),
@@ -67,7 +71,16 @@ export default async function SettingsPage() {
             theme={membership.gym.theme}
             themeMode={membership.gym.themeMode}
             logoUrl={membership.gym.logoUrl}
+            bannerUrl={membership.gym.bannerUrl}
           />
+        </div>
+      )}
+
+      {/* ---- Locations (gym admin) ---- */}
+      {isGymAdmin && (
+        <div className="section">
+          <div className="section-label">Locations</div>
+          <LocationsManager />
         </div>
       )}
 

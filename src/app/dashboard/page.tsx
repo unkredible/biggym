@@ -12,7 +12,9 @@ export default async function DashboardPage() {
 
   const membership = await prisma.membership.findUnique({
     where: { userId: session.user.id },
-    include: { gym: true },
+    include: {
+      gym: { include: { locations: { where: { active: true }, orderBy: { createdAt: "asc" } } } },
+    },
   });
 
   return (
@@ -42,15 +44,50 @@ export default async function DashboardPage() {
         </div>
       ) : (
         <>
-          <div className="card accent">
+          <div
+            className="card accent"
+            style={
+              membership.gym.bannerUrl
+                ? {
+                    backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.2), rgba(0,0,0,0.6)), url(${membership.gym.bannerUrl})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    color: "#fff",
+                    minHeight: 150,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "flex-end",
+                  }
+                : undefined
+            }
+          >
             <p className="muted" style={{ margin: 0 }}>Your gym</p>
             <h2 style={{ margin: "0.15rem 0 0.3rem", fontSize: "1.8rem" }}>
-              {membership.gym.name}
+              {membership.gym.appName ?? membership.gym.name}
             </h2>
             <p className="muted" style={{ margin: 0 }}>
               {membership.role} · {membership.gym.subscriptionStatus}
             </p>
           </div>
+
+          {membership.gym.locations.length > 0 && (
+            <div className="list">
+              {membership.gym.locations.map((l) => (
+                <div className="list-row" key={l.id}>
+                  <span className="lr-icon">📍</span>
+                  <span>
+                    <strong>{l.name}</strong>
+                    <br />
+                    <span className="muted">
+                      {l.addressLine}
+                      {l.city ? `, ${l.city}` : ""}
+                    </span>
+                  </span>
+                  {l.phone && <span className="lr-value">{l.phone}</span>}
+                </div>
+              ))}
+            </div>
+          )}
 
           {isStaffRole(membership.role) && (
             <div className="card">
