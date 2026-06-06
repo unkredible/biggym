@@ -130,6 +130,45 @@ li { margin: 0.25rem 0; }
 label { font-size: 0.82rem; color: var(--muted); font-weight: 600; }
 table { width: 100%; border-collapse: collapse; }
 
+/* ---- grouped settings list (iOS-style sections) ----------------------- */
+.section { margin-top: 1.8rem; }
+.section-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.55rem 0.5rem;
+}
+.list {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.95rem 1.15rem;
+  color: var(--fg);
+  font-weight: 600;
+}
+.list-row + .list-row { border-top: 1px solid var(--border); }
+a.list-row:hover { background: var(--surface-2); opacity: 1; }
+.lr-icon {
+  width: 32px; height: 32px; flex: 0 0 32px;
+  display: grid; place-items: center;
+  border-radius: 10px; background: var(--accent-soft); color: var(--accent);
+  font-size: 0.95rem;
+}
+.lr-value { margin-left: auto; color: var(--muted); font-weight: 500; font-size: 0.92rem; }
+.lr-chev { margin-left: 0.4rem; color: var(--muted); }
+
+/* tighter form field stack inside cards */
+.field { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.9rem; }
+.field:first-child { margin-top: 0; }
+
 /* ---- app header (logo + name) ----------------------------------------- */
 .appbar {
   display: flex; align-items: center; justify-content: space-between;

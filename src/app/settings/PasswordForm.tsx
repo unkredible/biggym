@@ -28,28 +28,20 @@ export default function PasswordForm({ hasPassword }: { hasPassword: boolean }) 
   }
 
   return (
-    <form onSubmit={submit} className="card" style={{ maxWidth: 380 }}>
+    <form onSubmit={submit} className="card">
       <strong>{hasPassword ? "Change password" : "Set a password"}</strong>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginTop: "0.6rem" }}>
-        {hasPassword && (
-          <input
-            type="password"
-            placeholder="Current password"
-            value={current}
-            onChange={(e) => setCurrent(e.target.value)}
-            required
-          />
-        )}
-        <input
-          type="password"
-          placeholder="New password (min 8)"
-          value={next}
-          onChange={(e) => setNext(e.target.value)}
-          required
-        />
-        <button className="primary" disabled={busy} type="submit">
-          Save
-        </button>
+      {hasPassword && (
+        <div className="field">
+          <label>Current password</label>
+          <input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
+        </div>
+      )}
+      <div className="field">
+        <label>New password (min 8)</label>
+        <input type="password" value={next} onChange={(e) => setNext(e.target.value)} required />
+      </div>
+      <div className="row" style={{ marginTop: "0.9rem" }}>
+        <button className="primary" disabled={busy} type="submit">Save password</button>
         {msg && <span className="muted">{msg}</span>}
       </div>
     </form>

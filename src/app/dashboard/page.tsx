@@ -42,24 +42,22 @@ export default async function DashboardPage() {
         </div>
       ) : (
         <>
-          <div className="card">
-            <p className="muted">Gym</p>
-            <h2 style={{ margin: "0.2rem 0" }}>{membership.gym.name}</h2>
-            <p className="muted">
-              role: <code>{membership.role}</code> · plan:{" "}
-              <code>{membership.gym.subscriptionStatus}</code>
+          <div className="card accent">
+            <p className="muted" style={{ margin: 0 }}>Your gym</p>
+            <h2 style={{ margin: "0.15rem 0 0.3rem", fontSize: "1.8rem" }}>
+              {membership.gym.name}
+            </h2>
+            <p className="muted" style={{ margin: 0 }}>
+              {membership.role} · {membership.gym.subscriptionStatus}
             </p>
           </div>
 
           {isStaffRole(membership.role) && (
             <div className="card">
               <h3>Manage</h3>
-              <div className="row" style={{ gap: "1rem" }}>
+              <div className="row" style={{ gap: "1.2rem" }}>
                 <a href="/clients">Clients →</a>
                 {membership.role === "gym_admin" && <a href="/staff">Staff →</a>}
-                {membership.role === "gym_admin" && (
-                  <a href="/settings">Settings →</a>
-                )}
               </div>
             </div>
           )}
@@ -73,8 +71,12 @@ export default async function DashboardPage() {
         </>
       )}
 
-      <div className="card">
-        <a href="/account">Account &amp; password →</a>
+      <div className="list" style={{ marginTop: "1.2rem" }}>
+        <a className="list-row" href="/settings">
+          <span className="lr-icon">⚙</span>
+          <span>Settings</span>
+          <span className="lr-value lr-chev">→</span>
+        </a>
       </div>
     </main>
   );
