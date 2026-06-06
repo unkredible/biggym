@@ -13,7 +13,8 @@ const ALLOWED = new Set(["image/png", "image/jpeg", "image/webp", "image/svg+xml
 const MAX = { logo: 2 * 1024 * 1024, banner: 5 * 1024 * 1024 };
 
 function safeId(id: string): string | null {
-  return /^[a-z0-9]+$/i.test(id) ? id : null;
+  // cuid or UUID — letters, digits, hyphens. No slashes/dots → no traversal.
+  return /^[a-z0-9-]+$/i.test(id) ? id : null;
 }
 function isKind(k: string): k is "logo" | "banner" {
   return k === "logo" || k === "banner";
