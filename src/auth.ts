@@ -17,6 +17,7 @@ import Nodemailer from "next-auth/providers/nodemailer";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db";
 import { verifyPassword } from "@/lib/password";
+import { seedDevUser, type DevAs } from "@/lib/dev";
 
 const smtpPort = Number.parseInt(process.env.SMTP_PORT ?? "587", 10);
 
@@ -56,6 +57,22 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       allowDangerousEmailAccountLinking: true,
+    }),
+  );
+}
+
+// DEV-ONLY instant login by role. Active only when DEV_QUICK_TOKEN is set.
+// NEVER enable in real production — it bypasses authentication.
+if (process.env.DEV_QUICK_TOKEN) {
+  providers.push(
+    Credentials({
+      id: "dev",
+      name: "Dev quick login",
+      credentials: { as: {}, token: {} },
+      async authorize(creds) {
+        if (creds?.token !== process.env.DEV_QUICK_TOKEN) return null;
+        return seedDevUser(String(creds?.as) as DevAs);
+      },
     }),
   );
 }
