@@ -1,9 +1,22 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { Space_Grotesk, Inter } from "next/font/google";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { isAppHost } from "@/lib/host";
 import "./globals.css";
+
+const display = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
+  display: "swap",
+});
+const body = Inter({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "biggym",
@@ -58,7 +71,12 @@ export default async function RootLayout({
   const brand = await getBrand();
 
   return (
-    <html lang="en" data-theme={brand.theme} data-mode={brand.themeMode}>
+    <html
+      lang="en"
+      data-theme={brand.theme}
+      data-mode={brand.themeMode}
+      className={`${display.variable} ${body.variable}`}
+    >
       <body>
         {brand.onApp && (
           <div className="appbar">
