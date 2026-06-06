@@ -38,7 +38,7 @@ export default function ProgramEditor({ clientId }: { clientId: string }) {
           setDays(
             (program.days ?? []).map((d: { title: string; exercises: unknown[] }) => ({
               title: d.title,
-              exercises: (d.exercises ?? []).map((e: Record<string, unknown>) => ({
+              exercises: ((d.exercises ?? []) as Record<string, unknown>[]).map((e) => ({
                 exerciseName: (e.exerciseName as string) ?? "",
                 targetSets: (e.targetSets as number) ?? 3,
                 targetReps: (e.targetReps as string) ?? "8-10",
