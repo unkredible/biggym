@@ -93,6 +93,9 @@ export default async function RootLayout({
                 )}
               </span>
             </a>
+            <a href="/logout" className="muted" style={{ fontWeight: 600 }}>
+              Sign out
+            </a>
           </div>
         )}
         {children}
