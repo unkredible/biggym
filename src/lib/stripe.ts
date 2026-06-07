@@ -23,13 +23,17 @@ export function getStripe(): Stripe {
 }
 
 export interface GymCheckoutInput {
-  gymName: string;
+  gymId: string;
   email: string;
   successUrl: string;
   cancelUrl: string;
   priceId?: string;
 }
 
+/**
+ * Subscription checkout for an already-created (trial) gym. The webhook
+ * activates the gym on `checkout.session.completed` via metadata.gym_id.
+ */
 export async function createGymSubscriptionCheckout(
   input: GymCheckoutInput,
 ): Promise<Stripe.Checkout.Session> {
@@ -37,11 +41,7 @@ export async function createGymSubscriptionCheckout(
   if (!priceId) {
     throw new Error("No price configured (set STRIPE_PRICE_ID)");
   }
-  const metadata = {
-    purpose: "gym_signup",
-    gym_name: input.gymName,
-    owner_email: input.email.toLowerCase(),
-  };
+  const metadata = { gym_id: input.gymId };
   return getStripe().checkout.sessions.create({
     mode: "subscription",
     line_items: [{ price: priceId, quantity: 1 }],

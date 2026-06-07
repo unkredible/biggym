@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { constructStripeEvent } from "@/lib/stripe";
-import { provisionGym } from "@/lib/gym";
 import { prisma } from "@/lib/db";
 import { sendTenantMail } from "@/lib/mail";
 import { appBaseUrl } from "@/lib/host";
@@ -51,40 +50,40 @@ async function handle(event: Stripe.Event) {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
-      const meta = session.metadata ?? {};
-      if (meta.purpose !== "gym_signup") return;
+      const gymId = session.metadata?.gym_id;
+      if (!gymId) return;
 
-      const gymName = meta.gym_name ?? "My gym";
-      const ownerEmail =
-        meta.owner_email ?? session.customer_details?.email ?? session.customer_email ?? "";
-      if (!ownerEmail) return;
+      const customerId =
+        typeof session.customer === "string"
+          ? session.customer
+          : session.customer?.id ?? null;
+      const subId =
+        typeof session.subscription === "string"
+          ? session.subscription
+          : session.subscription?.id ?? null;
 
-      const { gym } = await provisionGym({
-        gymName,
-        ownerEmail,
-        stripeCustomerId:
-          typeof session.customer === "string"
-            ? session.customer
-            : session.customer?.id ?? null,
-        stripeSubscriptionId:
-          typeof session.subscription === "string"
-            ? session.subscription
-            : session.subscription?.id ?? null,
+      const gym = await prisma.gym.update({
+        where: { id: gymId },
+        data: {
+          status: "active",
+          subscriptionStatus: "active",
+          stripeCustomerId: customerId ?? undefined,
+          stripeSubscriptionId: subId ?? undefined,
+        },
       });
 
-      const loginUrl = `${appBaseUrl()}/login`;
-      await sendTenantMail({
-        to: ownerEmail,
-        subject: `Your ${gym.name} workspace is ready`,
-        text:
-          `Welcome to biggym.\n\n` +
-          `Your gym "${gym.name}" is active. Sign in to manage clients and ` +
-          `workout programs:\n${loginUrl}\n\n` +
-          `Use this email address to receive a magic sign-in link, or set a ` +
-          `password from the login page.`,
-      }).catch(() => {
-        /* email failure shouldn't fail the webhook */
-      });
+      // Courtesy confirmation email.
+      if (gym.contactEmail) {
+        await sendTenantMail({
+          to: gym.contactEmail,
+          subject: `${gym.name}: subscription confirmed 🎉`,
+          text:
+            `Thanks for subscribing to biggym.\n\n` +
+            `Your subscription for "${gym.name}" is active. Plan: €9/month + ` +
+            `€0.50 per activated client, billed at month end.\n\n` +
+            `Open your app: ${appBaseUrl()}/dashboard`,
+        }).catch(() => {});
+      }
       break;
     }
 

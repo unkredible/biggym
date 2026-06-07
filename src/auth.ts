@@ -69,6 +69,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: "/login",
     verifyRequest: "/login?check=email",
   },
+  events: {
+    // Fires when the adapter creates a new user (magic-link or Google first
+    // sign-in) — send a courtesy welcome email regardless of method.
+    async createUser({ user }) {
+      if (!user.email) return;
+      try {
+        const { sendTenantMail } = await import("@/lib/mail");
+        await sendTenantMail({
+          to: user.email,
+          subject: "Welcome to biggym",
+          text:
+            `Welcome to biggym!\n\n` +
+            `Your account (${user.email}) is ready. You can sign in any time ` +
+            `with this email — magic link, Google, or a password you set in ` +
+            `Settings.`,
+        });
+      } catch {
+        /* never block account creation on email failure */
+      }
+    },
+  },
   callbacks: {
     async jwt({ token, user }) {
       // On sign-in, resolve the user's gym + role once and cache in the token.

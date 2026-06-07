@@ -17,6 +17,9 @@ export default async function DashboardPage() {
     },
   });
 
+  // A signed-in user with no gym yet → start the gym sign-up flow.
+  if (!membership) redirect("/onboarding");
+
   return (
     <main>
       <div className="row spread">
