@@ -69,7 +69,7 @@ export default async function PortalHome() {
           { ic: "👥", t: "Clients & CRM", d: "Records, onboarding status, history and staff assignment." },
           { ic: "🏋️", t: "Workout builder", d: "Build programs (days, exercises, sets/reps) your clients see in their app." },
           { ic: "🎨", t: "Your branding", d: "5 themes, light/dark, your logo & banner — it feels like your app." },
-          { ic: "💳", t: "Simple billing", d: "Flat €9/month + €0.50 per activated client, one invoice at month end." },
+          { ic: "📍", t: "Multiple locations", d: "Manage several sites under one gym account." },
         ].map((f) => (
           <div className="card lp-feature" key={f.t}>
             <div className="ic">{f.ic}</div>

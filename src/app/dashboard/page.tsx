@@ -29,7 +29,6 @@ export default async function DashboardPage() {
         <div className="row">
           {gyms.length > 1 && <GymSwitcher gyms={gyms} activeId={ctx.gymId} />}
           {ctx.isSuper && <a href="/admin">Platform admin</a>}
-          <a href="/logout" className="muted" style={{ fontWeight: 600 }}>Log out</a>
         </div>
       </div>
 
