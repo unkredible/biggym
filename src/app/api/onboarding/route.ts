@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { hashPassword } from "@/lib/password";
 import { slugify, ACTIVE_GYM_COOKIE } from "@/lib/gym";
 import { createGymSubscriptionCheckout } from "@/lib/stripe";
+import { sendTenantMail } from "@/lib/mail";
 import { appBaseUrl, cookieDomain } from "@/lib/host";
 
 export const runtime = "nodejs";
@@ -87,6 +88,19 @@ export async function POST(req: NextRequest) {
       fullName: gymName,
       email: session.user.email,
     },
+  });
+
+  // Courtesy email confirming the gym was created.
+  await sendTenantMail({
+    to: session.user.email,
+    subject: `${gym.name} is ready on biggym 🎉`,
+    text:
+      `Your gym "${gym.name}" has been created.\n\n` +
+      `Plan: €9/month + €0.50 per activated client, billed at month end.\n` +
+      `Complete payment to activate, then open your app:\n` +
+      `${appBaseUrl()}/dashboard\n`,
+  }).catch(() => {
+    /* don't fail onboarding on email error */
   });
 
   // Make the new gym the active one.
