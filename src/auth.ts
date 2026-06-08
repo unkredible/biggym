@@ -17,6 +17,7 @@ import Nodemailer from "next-auth/providers/nodemailer";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db";
 import { verifyPassword } from "@/lib/password";
+import { cookieDomain } from "@/lib/host";
 
 const smtpPort = Number.parseInt(process.env.SMTP_PORT ?? "587", 10);
 
@@ -64,6 +65,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   trustHost: true,
   session: { strategy: "jwt" },
+  // Share the session cookie across the portal + app subdomains so a single
+  // login works on both biggym.<base> and app.biggym.<base>.
+  cookies: {
+    sessionToken: {
+      name: "__Secure-authjs.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: true,
+        domain: cookieDomain(),
+      },
+    },
+  },
   providers,
   pages: {
     signIn: "/login",

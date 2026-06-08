@@ -25,3 +25,13 @@ export function appBaseUrl(): string {
 export function portalBaseUrl(): string {
   return `https://${bigDomains().portal}`;
 }
+
+/**
+ * Cookie domain that covers BOTH the portal (<name>.<base>) and the app
+ * (app.<name>.<base>), so a session set on the app host is also sent to the
+ * portal host. A cookie with Domain=<name>.<base> is sent to that host and all
+ * its subdomains.
+ */
+export function cookieDomain(): string {
+  return process.env.COOKIE_DOMAIN ?? bigDomains().portal;
+}
