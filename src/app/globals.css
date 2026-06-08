@@ -176,6 +176,17 @@ a.list-row:hover { background: var(--surface-2); opacity: 1; }
 .field { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.9rem; }
 .field:first-child { margin-top: 0; }
 
+/* ---- landing page ----------------------------------------------------- */
+.lp-nav { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 0 0.5rem; }
+.lp-eyebrow { color: var(--accent); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.76rem; }
+.lp-hero-h { font-family: var(--font-display), sans-serif; font-weight: 700; font-size: clamp(2.6rem, 8vw, 4.4rem); line-height: 1.02; letter-spacing: -0.04em; margin: 0.5rem 0; }
+.lp-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin: 1rem 0; }
+.lp-feature .ic { font-size: 1.6rem; }
+.lp-steps { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.lp-step .n { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 800; }
+.lp-foot { margin-top: 3rem; padding: 2rem 0 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.9rem; }
+.lp-section-title { font-size: 1.6rem; margin: 2.4rem 0 0.4rem; }
+
 /* ---- app header (logo + name) ----------------------------------------- */
 .appbar {
   display: flex; align-items: center; justify-content: space-between;
