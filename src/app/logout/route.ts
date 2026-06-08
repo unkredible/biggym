@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { appBaseUrl } from "@/lib/host";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
  * GET /logout — clears the Auth.js session cookies and returns to /login.
- * A dependable sign-out link (no button / server action needed).
+ * Redirects to the public app host (req.url is the internal 0.0.0.0:3000).
  */
-export async function GET(req: NextRequest) {
-  const res = NextResponse.redirect(new URL("/login", req.url));
+export async function GET() {
+  const res = NextResponse.redirect(`${appBaseUrl()}/login`);
   const names = [
     "authjs.session-token",
     "__Secure-authjs.session-token",
