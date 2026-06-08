@@ -1,15 +1,19 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { isAppHost, appBaseUrl } from "@/lib/host";
 
 export const dynamic = "force-dynamic";
 
-export default function PortalHome() {
+export default async function PortalHome() {
   const host = headers().get("host");
   if (isAppHost(host)) redirect("/dashboard");
 
+  const session = await auth();
+  const loggedIn = !!session?.user;
   const onboarding = `${appBaseUrl()}/onboarding`;
   const login = `${appBaseUrl()}/login`;
+  const appHome = `${appBaseUrl()}/dashboard`;
 
   return (
     <main>
@@ -19,8 +23,20 @@ export default function PortalHome() {
           big<span style={{ color: "var(--accent)" }}>gym</span>
         </span>
         <div className="row" style={{ gap: "0.6rem" }}>
-          <a href={login} className="muted" style={{ fontWeight: 600 }}>Log in</a>
-          <a href="#signup"><button className="primary" style={{ padding: "0.45rem 1.1rem" }}>Sign up</button></a>
+          {loggedIn ? (
+            <a href={appHome}>
+              <button className="primary" style={{ padding: "0.45rem 1.1rem" }}>
+                Go to app →
+              </button>
+            </a>
+          ) : (
+            <>
+              <a href={login} className="muted" style={{ fontWeight: 600 }}>Log in</a>
+              <a href="#signup">
+                <button className="primary" style={{ padding: "0.45rem 1.1rem" }}>Sign up</button>
+              </a>
+            </>
+          )}
         </div>
       </nav>
 
@@ -38,7 +54,11 @@ export default function PortalHome() {
         </p>
         <div className="row" style={{ gap: "0.6rem", marginTop: "1.2rem" }}>
           <a href="#signup"><button className="primary">Start your gym →</button></a>
-          <a href={login} className="muted" style={{ fontWeight: 600 }}>I already have an account</a>
+          {loggedIn ? (
+            <a href={appHome} className="muted" style={{ fontWeight: 600 }}>Go to your app →</a>
+          ) : (
+            <a href={login} className="muted" style={{ fontWeight: 600 }}>I already have an account</a>
+          )}
         </div>
       </section>
 
