@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { hashPassword } from "@/lib/password";
-import { slugify } from "@/lib/gym";
+import { slugify, ACTIVE_GYM_COOKIE } from "@/lib/gym";
 import { createGymSubscriptionCheckout } from "@/lib/stripe";
-import { appBaseUrl } from "@/lib/host";
+import { appBaseUrl, cookieDomain } from "@/lib/host";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,14 +21,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "sign in first" }, { status: 401 });
   }
 
-  // Already onboarded?
-  const existing = await prisma.membership.findUnique({
-    where: { userId: session.user.id },
-  });
-  if (existing) {
-    return NextResponse.json({ error: "already has a gym" }, { status: 409 });
-  }
-
+  // A user may own multiple gyms — no single-gym guard here.
   let body: { gymName?: string; password?: string };
   try {
     body = await req.json();
@@ -96,6 +89,19 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // Make the new gym the active one.
+  function withActiveGym(res: NextResponse) {
+    res.cookies.set(ACTIVE_GYM_COOKIE, gym.id, {
+      path: "/",
+      domain: cookieDomain(),
+      httpOnly: true,
+      sameSite: "lax",
+      secure: true,
+      maxAge: 60 * 60 * 24 * 365,
+    });
+    return res;
+  }
+
   // Checkout to activate.
   try {
     const base = appBaseUrl();
@@ -105,11 +111,15 @@ export async function POST(req: NextRequest) {
       successUrl: `${base}/dashboard?subscribed=1`,
       cancelUrl: `${base}/dashboard?pending=1`,
     });
-    return NextResponse.json({ url: co.url });
+    return withActiveGym(NextResponse.json({ url: co.url }));
   } catch (err) {
     // Gym created in trial even if checkout couldn't start.
-    return NextResponse.json(
-      { ok: true, url: null, warn: err instanceof Error ? err.message : "checkout unavailable" },
+    return withActiveGym(
+      NextResponse.json({
+        ok: true,
+        url: null,
+        warn: err instanceof Error ? err.message : "checkout unavailable",
+      }),
     );
   }
 }

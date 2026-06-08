@@ -53,8 +53,9 @@ export async function POST(req: NextRequest) {
     create: { email: invite.email, name: fullName },
     update: {},
   });
-  const existingMembership = await prisma.membership.findUnique({
-    where: { userId: user.id },
+  const existingMembership = await prisma.membership.findFirst({
+    where: { userId: user.id, gymId: invite.gymId },
+    select: { id: true },
   });
   if (!existingMembership) {
     await prisma.membership.create({

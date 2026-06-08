@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { isSuperAdmin } from "@/lib/admin";
+import { currentContext } from "@/lib/gym";
 import SettingsForm from "./SettingsForm";
 import PasswordForm from "./PasswordForm";
 import LocationsManager from "./LocationsManager";
@@ -9,29 +8,23 @@ import LocationsManager from "./LocationsManager";
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const ctx = await currentContext();
+  if (!ctx) redirect("/login");
 
-  const [user, membership] = await Promise.all([
+  const [user, gym] = await Promise.all([
     prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: ctx.userId },
       select: { email: true, passwordHash: true },
     }),
-    prisma.membership.findUnique({
-      where: { userId: session.user.id },
-      include: {
-        gym: {
-          select: {
-            name: true, appName: true, theme: true, themeMode: true,
-            logoUrl: true, bannerUrl: true,
-          },
-        },
-      },
-    }),
+    ctx.gymId
+      ? prisma.gym.findUnique({
+          where: { id: ctx.gymId },
+          select: { name: true, appName: true, theme: true, themeMode: true, logoUrl: true, bannerUrl: true },
+        })
+      : null,
   ]);
 
-  const isGymAdmin = membership?.role === "gym_admin";
-  const superAdmin = isSuperAdmin(session.user.role);
+  const isGymAdmin = ctx.role === "gym_admin";
 
   return (
     <main>
@@ -49,11 +42,11 @@ export default async function SettingsPage() {
             <span>Email</span>
             <span className="lr-value">{user?.email}</span>
           </div>
-          {membership && (
+          {ctx.role && (
             <div className="list-row">
               <span className="lr-icon">★</span>
               <span>Role</span>
-              <span className="lr-value">{membership.role}</span>
+              <span className="lr-value">{ctx.role}</span>
             </div>
           )}
         </div>
@@ -63,15 +56,15 @@ export default async function SettingsPage() {
       </div>
 
       {/* ---- Appearance (gym admin) ---- */}
-      {isGymAdmin && membership?.gym && (
+      {isGymAdmin && gym && (
         <div className="section">
-          <div className="section-label">Appearance</div>
+          <div className="section-label">Appearance — {gym.name}</div>
           <SettingsForm
-            appName={membership.gym.appName ?? ""}
-            theme={membership.gym.theme}
-            themeMode={membership.gym.themeMode}
-            logoUrl={membership.gym.logoUrl}
-            bannerUrl={membership.gym.bannerUrl}
+            appName={gym.appName ?? ""}
+            theme={gym.theme}
+            themeMode={gym.themeMode}
+            logoUrl={gym.logoUrl}
+            bannerUrl={gym.bannerUrl}
           />
         </div>
       )}
@@ -85,7 +78,7 @@ export default async function SettingsPage() {
       )}
 
       {/* ---- Platform (super admin) ---- */}
-      {superAdmin && (
+      {ctx.isSuper && (
         <div className="section">
           <div className="section-label">Platform</div>
           <div className="list">

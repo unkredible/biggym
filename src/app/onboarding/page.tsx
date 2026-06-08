@@ -13,15 +13,10 @@ export default async function OnboardingPage({
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const [membership, me] = await Promise.all([
-    prisma.membership.findUnique({ where: { userId: session.user.id } }),
-    prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { passwordHash: true },
-    }),
-  ]);
-  if (membership) redirect("/dashboard");
-
+  const me = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { passwordHash: true },
+  });
   const hasPassword = !!me?.passwordHash;
 
   return (

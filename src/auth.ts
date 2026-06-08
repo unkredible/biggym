@@ -107,49 +107,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user }) {
-      // On sign-in, resolve the user's gym + role once and cache in the token.
-      if (user?.id) {
-        token.uid = user.id;
-        const m = await prisma.membership.findUnique({
-          where: { userId: user.id },
-          select: { gymId: true, role: true },
-        });
-        token.gymId = m?.gymId ?? null;
-        token.role = m?.role ?? null;
-      }
+      if (user?.id) token.uid = user.id;
       return token;
     },
     async session({ session, token }) {
+      // Keep the session minimal: identity only. The active gym + role are
+      // resolved per request from the membership list + the active-gym cookie
+      // (see lib/gym.currentContext), since a user can belong to many gyms.
       if (session.user) {
-        const uid = (token.uid as string) ?? "";
-        session.user.id = uid;
-        // Resolve membership fresh each session read so a gym/role assigned
-        // after sign-in (e.g. right after subscribing) shows up without a
-        // re-login. Falls back to the token's cached values.
-        let gymId = (token.gymId as string | null) ?? null;
-        let role = (token.role as string | null) ?? null;
-        if (uid && !gymId) {
-          const m = await prisma.membership.findUnique({
-            where: { userId: uid },
-            select: { gymId: true, role: true },
-          });
-          if (m) {
-            gymId = m.gymId;
-            role = m.role;
-          }
-        }
-        // Platform owners (SUPERADMIN_EMAILS) always get the super_admin role,
-        // regardless of any gym membership.
-        const supers = (process.env.SUPERADMIN_EMAILS ?? "")
-          .toLowerCase()
-          .split(/[,\s]+/)
-          .filter(Boolean);
-        if (session.user.email && supers.includes(session.user.email.toLowerCase())) {
-          role = "super_admin";
-        }
-
-        session.user.gymId = gymId;
-        session.user.role = role;
+        session.user.id = (token.uid as string) ?? "";
       }
       return session;
     },

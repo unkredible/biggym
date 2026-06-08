@@ -33,17 +33,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const existing = await prisma.membership.findUnique({
-    where: { userId: session.user.id },
+  // A user can belong to many gyms — only create if not already in THIS gym.
+  const existing = await prisma.membership.findFirst({
+    where: { userId: session.user.id, gymId: invite.gymId },
+    select: { id: true },
   });
-  if (existing) {
-    if (existing.gymId !== invite.gymId) {
-      return NextResponse.json(
-        { error: "This account already belongs to another gym." },
-        { status: 409 },
-      );
-    }
-  } else {
+  if (!existing) {
     await prisma.membership.create({
       data: {
         gymId: invite.gymId,

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { Space_Grotesk, Inter } from "next/font/google";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { isAppHost } from "@/lib/host";
+import { currentContext } from "@/lib/gym";
 import "./globals.css";
 
 const display = Space_Grotesk({
@@ -45,12 +45,11 @@ async function getBrand(): Promise<Brand> {
     const host = headers().get("host");
     const onApp = isAppHost(host);
     if (!onApp) return defaults;
-    const session = await auth();
-    const loggedIn = !!session?.user;
-    const gymId = session?.user?.gymId;
-    if (!gymId) return { ...defaults, onApp, loggedIn };
+    const ctx = await currentContext();
+    const loggedIn = !!ctx;
+    if (!ctx?.gymId) return { ...defaults, onApp, loggedIn };
     const gym = await prisma.gym.findUnique({
-      where: { id: gymId },
+      where: { id: ctx.gymId },
       select: { appName: true, theme: true, themeMode: true, logoUrl: true },
     });
     if (!gym) return { ...defaults, onApp, loggedIn };

@@ -33,10 +33,10 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts   Account[]
-  sessions   Session[]
-  membership Membership?
-  client     Client?
+  accounts    Account[]
+  sessions    Session[]
+  memberships Membership[]
+  client      Client?
 
   @@index([email])
 }
@@ -154,7 +154,7 @@ model Membership {
   id        String     @id @default(cuid())
   gymId     String
   gym       Gym        @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  userId    String     @unique
+  userId    String
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   role      MemberRole
   fullName  String
@@ -167,7 +167,10 @@ model Membership {
   programs        WorkoutProgram[]
   events          ClientEvent[]
 
+  // One membership per user per gym; a user can belong to many gyms.
+  @@unique([userId, gymId])
   @@index([gymId])
+  @@index([userId])
 }
 
 // ---------------------------------------------------------------------------

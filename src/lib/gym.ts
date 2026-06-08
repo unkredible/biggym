@@ -16,100 +16,73 @@ export function slugify(input: string): string {
   return base || "gym";
 }
 
-/** Ensure a unique slug by appending a short suffix on collision. */
-async function uniqueSlug(name: string): Promise<string> {
-  const base = slugify(name);
-  let slug = base;
-  for (let i = 0; i < 5; i++) {
-    const exists = await prisma.gym.findUnique({ where: { slug } });
-    if (!exists) return slug;
-    slug = `${base}-${Math.random().toString(36).slice(2, 6)}`;
-  }
-  return `${base}-${Date.now().toString(36)}`;
-}
-
-export interface ProvisionGymInput {
-  gymName: string;
-  ownerEmail: string;
-  stripeCustomerId?: string | null;
-  stripeSubscriptionId?: string | null;
-  plan?: string | null;
-}
-
-/**
- * Create (or update) a gym + its owner User + gym_admin Membership after a
- * successful subscription. Idempotent on the owner email / stripe customer.
- */
-export async function provisionGym(input: ProvisionGymInput) {
-  const email = input.ownerEmail.toLowerCase();
-
-  // Reuse an existing gym for this stripe customer if present.
-  let gym = input.stripeCustomerId
-    ? await prisma.gym.findUnique({
-        where: { stripeCustomerId: input.stripeCustomerId },
-      })
-    : null;
-
-  if (!gym) {
-    gym = await prisma.gym.create({
-      data: {
-        name: input.gymName,
-        slug: await uniqueSlug(input.gymName),
-        status: "active",
-        contactEmail: email,
-        appName: input.gymName,
-        stripeCustomerId: input.stripeCustomerId ?? undefined,
-        stripeSubscriptionId: input.stripeSubscriptionId ?? undefined,
-        plan: input.plan ?? undefined,
-        subscriptionStatus: "active",
-      },
-    });
-  } else {
-    gym = await prisma.gym.update({
-      where: { id: gym.id },
-      data: {
-        status: "active",
-        subscriptionStatus: "active",
-        stripeSubscriptionId: input.stripeSubscriptionId ?? gym.stripeSubscriptionId,
-        plan: input.plan ?? gym.plan,
-      },
-    });
-  }
-
-  // Owner user + gym_admin membership.
-  const user = await prisma.user.upsert({
-    where: { email },
-    create: { email },
-    update: {},
-  });
-
-  await prisma.membership.upsert({
-    where: { userId: user.id },
-    create: {
-      gymId: gym.id,
-      userId: user.id,
-      role: "gym_admin",
-      fullName: input.gymName,
-      email,
-    },
-    update: { gymId: gym.id, role: "gym_admin", active: true },
-  });
-
-  return { gym, user };
-}
-
 const STAFF_ROLES = new Set(["super_admin", "gym_admin", "reception", "trainer"]);
 
+export const ACTIVE_GYM_COOKIE = "biggym_gym";
+
+export function isSuperEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  const supers = (process.env.SUPERADMIN_EMAILS ?? "")
+    .toLowerCase()
+    .split(/[,\s]+/)
+    .filter(Boolean);
+  return supers.includes(email.toLowerCase());
+}
+
+export interface Ctx {
+  userId: string;
+  email: string;
+  gymId: string | null;
+  role: string | null; // membership role for the ACTIVE gym
+  isSuper: boolean; // platform owner (separate from gym role)
+  membershipCount: number;
+}
+
 /**
- * Resolve the current session's gym + role. Throws-by-redirect should be done
- * by the caller; this just returns null when there is no usable membership.
+ * Resolve the current session's ACTIVE gym + role. A user can belong to many
+ * gyms; the active one is chosen by the biggym_gym cookie, else the first.
+ * super_admin is a separate flag so a platform owner can still act as the
+ * gym_admin of gyms they belong to.
  */
-export async function currentContext() {
+export async function currentContext(): Promise<Ctx | null> {
   const session = await auth();
   if (!session?.user?.id) return null;
-  const gymId = session.user.gymId ?? null;
-  const role = session.user.role ?? null;
-  return { userId: session.user.id, email: session.user.email ?? "", gymId, role };
+  const userId = session.user.id;
+  const email = session.user.email ?? "";
+
+  const memberships = await prisma.membership.findMany({
+    where: { userId },
+    select: { gymId: true, role: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const { cookies } = await import("next/headers");
+  const activeId = cookies().get(ACTIVE_GYM_COOKIE)?.value;
+  const active =
+    memberships.find((m) => m.gymId === activeId) ?? memberships[0] ?? null;
+
+  return {
+    userId,
+    email,
+    gymId: active?.gymId ?? null,
+    role: active?.role ?? null,
+    isSuper: isSuperEmail(email),
+    membershipCount: memberships.length,
+  };
+}
+
+/** List the user's gyms (for the gym switcher). */
+export async function listUserGyms(userId: string) {
+  const ms = await prisma.membership.findMany({
+    where: { userId },
+    select: { gymId: true, role: true, gym: { select: { name: true, appName: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+  return ms.map((m) => ({
+    gymId: m.gymId,
+    role: m.role,
+    name: m.gym.appName ?? m.gym.name,
+  }));
 }
 
 export function isStaffRole(role: string | null | undefined): boolean {
