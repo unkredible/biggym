@@ -20,8 +20,6 @@ export default async function DashboardPage() {
   ]);
   if (!gym) redirect("/onboarding");
 
-  const isAdmin = ctx.role === "gym_admin";
-
   return (
     <main>
       <div className="row spread">
@@ -78,12 +76,12 @@ export default async function DashboardPage() {
       )}
 
       {isStaffRole(ctx.role) && (
-        <div className="card">
-          <h3>Manage</h3>
-          <div className="row" style={{ gap: "1.2rem" }}>
-            <a href="/clients">Clients →</a>
-            {isAdmin && <a href="/staff">Staff →</a>}
-          </div>
+        <div className="list">
+          <a className="list-row" href="/people">
+            <span className="lr-icon">👥</span>
+            <span>People <span className="muted">— staff &amp; clients</span></span>
+            <span className="lr-value lr-chev">→</span>
+          </a>
         </div>
       )}
 
