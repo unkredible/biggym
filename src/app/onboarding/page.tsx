@@ -5,7 +5,11 @@ import OnboardingForm from "./OnboardingForm";
 
 export const dynamic = "force-dynamic";
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams: { name?: string };
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
@@ -29,7 +33,7 @@ export default async function OnboardingPage() {
           ? "Name your gym, then complete payment."
           : "Choose a password and your gym name, then complete payment."}
       </p>
-      <OnboardingForm hasPassword={hasPassword} />
+      <OnboardingForm hasPassword={hasPassword} defaultName={searchParams.name ?? ""} />
     </main>
   );
 }

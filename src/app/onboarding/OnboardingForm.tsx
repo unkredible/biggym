@@ -2,8 +2,14 @@
 
 import { useState } from "react";
 
-export default function OnboardingForm({ hasPassword }: { hasPassword: boolean }) {
-  const [gymName, setGymName] = useState("");
+export default function OnboardingForm({
+  hasPassword,
+  defaultName = "",
+}: {
+  hasPassword: boolean;
+  defaultName?: string;
+}) {
+  const [gymName, setGymName] = useState(defaultName);
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [error, setError] = useState("");

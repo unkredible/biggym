@@ -29,6 +29,7 @@ interface Brand {
   themeMode: string;
   logoUrl: string | null;
   onApp: boolean;
+  loggedIn: boolean;
 }
 
 async function getBrand(): Promise<Brand> {
@@ -38,25 +39,28 @@ async function getBrand(): Promise<Brand> {
     themeMode: "dark",
     logoUrl: null,
     onApp: false,
+    loggedIn: false,
   };
   try {
     const host = headers().get("host");
     const onApp = isAppHost(host);
     if (!onApp) return defaults;
     const session = await auth();
+    const loggedIn = !!session?.user;
     const gymId = session?.user?.gymId;
-    if (!gymId) return { ...defaults, onApp };
+    if (!gymId) return { ...defaults, onApp, loggedIn };
     const gym = await prisma.gym.findUnique({
       where: { id: gymId },
       select: { appName: true, theme: true, themeMode: true, logoUrl: true },
     });
-    if (!gym) return { ...defaults, onApp };
+    if (!gym) return { ...defaults, onApp, loggedIn };
     return {
       appName: gym.appName,
       theme: gym.theme,
       themeMode: gym.themeMode,
       logoUrl: gym.logoUrl,
       onApp,
+      loggedIn,
     };
   } catch {
     return defaults;
@@ -80,22 +84,32 @@ export default async function RootLayout({
       <body>
         {brand.onApp && (
           <div className="appbar">
-            <a href="/dashboard" className="brandrow">
-              {brand.logoUrl ? (
+            <a href={brand.loggedIn ? "/dashboard" : "/login"} className="brandrow">
+              {brand.loggedIn && brand.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={brand.logoUrl} alt={brand.appName ?? "logo"} />
               ) : null}
               <span className="brandname">
-                {brand.appName ?? (
+                {brand.loggedIn && brand.appName ? (
+                  brand.appName
+                ) : (
                   <>
                     big<span className="dot">gym</span>
                   </>
                 )}
               </span>
             </a>
-            <a href="/logout" className="muted" style={{ fontWeight: 600 }}>
-              Sign out
-            </a>
+            {brand.loggedIn ? (
+              <a href="/logout" className="muted" style={{ fontWeight: 600 }}>
+                Log out
+              </a>
+            ) : (
+              <a href="/login">
+                <button className="primary" style={{ padding: "0.4rem 1.1rem" }}>
+                  Log in
+                </button>
+              </a>
+            )}
           </div>
         )}
         {children}
