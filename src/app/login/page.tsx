@@ -58,6 +58,10 @@ export default async function LoginPage({
         <div className="row" style={{ marginTop: "0.9rem" }}>
           <button className="primary" type="submit">Log in</button>
         </div>
+        <p className="muted" style={{ margin: "0.7rem 0 0", fontSize: "0.85rem" }}>
+          No password yet? Sign in with Google or a magic link, then set one in
+          Settings → Account.
+        </p>
       </form>
 
       {googleEnabled && (

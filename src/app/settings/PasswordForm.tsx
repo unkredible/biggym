@@ -30,6 +30,12 @@ export default function PasswordForm({ hasPassword }: { hasPassword: boolean }) 
   return (
     <form onSubmit={submit} className="card">
       <strong>{hasPassword ? "Change password" : "Set a password"}</strong>
+      {!hasPassword && (
+        <p className="muted" style={{ margin: "0.3rem 0 0" }}>
+          You currently sign in with a magic link or Google. Set a password to
+          also log in with email + password.
+        </p>
+      )}
       {hasPassword && (
         <div className="field">
           <label>Current password</label>
