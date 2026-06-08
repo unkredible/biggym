@@ -36,17 +36,39 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "bad request" }, { status: 400 });
   }
   const gymName = (body.gymName ?? "").trim();
-  const password = body.password ?? "";
   if (!gymName) return NextResponse.json({ error: "Gym name required." }, { status: 400 });
-  if (password.length < 8) {
-    return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
+
+  // Reject a duplicate gym name (case-insensitive).
+  const dup = await prisma.gym.findFirst({
+    where: { name: { equals: gymName, mode: "insensitive" } },
+    select: { id: true },
+  });
+  if (dup) {
+    return NextResponse.json(
+      { error: "A gym with this name already exists." },
+      { status: 409 },
+    );
   }
 
-  // Set password.
-  await prisma.user.update({
+  // Only ask for a password if the account doesn't have one yet (e.g. first
+  // sign-up via magic link). An already-authenticated user keeps their login.
+  const me = await prisma.user.findUnique({
     where: { id: session.user.id },
-    data: { passwordHash: await hashPassword(password) },
+    select: { passwordHash: true },
   });
+  if (!me?.passwordHash) {
+    const password = body.password ?? "";
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: "Password must be at least 8 characters." },
+        { status: 400 },
+      );
+    }
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { passwordHash: await hashPassword(password) },
+    });
+  }
 
   // Create gym (trial) + owner membership.
   let slug = slugify(gymName);
