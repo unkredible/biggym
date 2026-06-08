@@ -6,18 +6,26 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /logout — clears the Auth.js session cookies and returns to /login.
- * Redirects to the public app host (req.url is the internal 0.0.0.0:3000).
+ *
+ * On HTTPS the session cookie is named "__Secure-authjs.session-token"; a
+ * browser refuses a Set-Cookie for a "__Secure-"/"__Host-" name unless the
+ * Secure attribute is present, so we must clear those WITH secure:true.
  */
 export async function GET() {
   const res = NextResponse.redirect(`${appBaseUrl()}/login`);
-  const names = [
-    "authjs.session-token",
+
+  const insecure = ["authjs.session-token", "authjs.csrf-token", "authjs.callback-url"];
+  const secure = [
     "__Secure-authjs.session-token",
-    "authjs.csrf-token",
     "__Host-authjs.csrf-token",
-    "authjs.callback-url",
     "__Secure-authjs.callback-url",
   ];
-  for (const n of names) res.cookies.set(n, "", { path: "/", maxAge: 0 });
+
+  for (const n of insecure) {
+    res.cookies.set(n, "", { path: "/", maxAge: 0, httpOnly: true, sameSite: "lax" });
+  }
+  for (const n of secure) {
+    res.cookies.set(n, "", { path: "/", maxAge: 0, httpOnly: true, sameSite: "lax", secure: true });
+  }
   return res;
 }
