@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { currentContext, isStaffRole } from "@/lib/gym";
+import { RECUR, canAdmin, sharedEventFields } from "@/lib/events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const RECUR = new Set(["none", "daily", "weekly", "monthly"]);
-
-function canAdmin(role: string | null, isSuper: boolean) {
-  return isSuper || role === "gym_admin";
-}
-
-/** GET — list a gym's events (any staff). */
+/** GET — list a gym's events with location/plan names + per-occurrence exceptions. */
 export async function GET() {
   const ctx = await currentContext();
   if (!ctx?.gymId || !isStaffRole(ctx.role)) {
@@ -20,6 +15,11 @@ export async function GET() {
   const events = await prisma.event.findMany({
     where: { gymId: ctx.gymId },
     orderBy: { startsAt: "asc" },
+    include: {
+      location: { select: { name: true } },
+      plan: { select: { name: true } },
+      exceptions: true,
+    },
   });
   return NextResponse.json({ events });
 }
@@ -57,6 +57,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Bad repeat-until date." }, { status: 400 });
   }
 
+  const s = await sharedEventFields(b, ctx.gymId);
+  if ("error" in s) return NextResponse.json({ error: s.error }, { status: 400 });
+
   const event = await prisma.event.create({
     data: {
       gymId: ctx.gymId,
@@ -67,6 +70,11 @@ export async function POST(req: NextRequest) {
       allDay: Boolean(b.allDay),
       recurrence: recurrence as "none" | "daily" | "weekly" | "monthly",
       recurUntil,
+      capacity: s.capacity,
+      audience: s.audience,
+      planId: s.planId,
+      locationId: s.locationId,
+      locationText: s.locationText,
     },
   });
   return NextResponse.json({ event });

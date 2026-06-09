@@ -63,6 +63,17 @@ export async function PATCH(
     }
     data.assignedTrainerId = tid;
   }
+  if (b.planId !== undefined) {
+    const pid = b.planId ? String(b.planId) : null;
+    if (pid) {
+      const plan = await prisma.plan.findFirst({
+        where: { id: pid, gymId: ctx.gymId! },
+        select: { id: true },
+      });
+      if (!plan) return NextResponse.json({ error: "invalid plan" }, { status: 400 });
+    }
+    data.planId = pid;
+  }
 
   await prisma.client.update({ where: { id: params.id }, data });
   return NextResponse.json({ ok: true });

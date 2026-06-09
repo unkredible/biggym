@@ -134,6 +134,7 @@ model Gym {
   locations    GymLocation[]
   documents    ClientDocument[]
   events       Event[]
+  plans        Plan[]
 
   @@index([slug])
 }
@@ -145,20 +146,75 @@ enum Recurrence {
   monthly
 }
 
-model Event {
-  id         String     @id @default(cuid())
+enum EventAudience {
+  all // every client
+  plan // only clients on a specific plan
+}
+
+// A subscription/membership plan a gym offers. Clients are assigned one; events
+// can be restricted to a plan's holders.
+model Plan {
+  id         String   @id @default(cuid())
   gymId      String
-  gym        Gym        @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  gym        Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  name       String
+  priceCents Int?
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  clients Client[]
+  events  Event[]
+
+  @@index([gymId])
+}
+
+model Event {
+  id         String        @id @default(cuid())
+  gymId      String
+  gym        Gym           @relation(fields: [gymId], references: [id], onDelete: Cascade)
   title      String
   notes      String?
   startsAt   DateTime
   endsAt     DateTime?
-  allDay     Boolean    @default(false)
-  recurrence Recurrence @default(none)
+  allDay     Boolean       @default(false)
+  recurrence Recurrence    @default(none)
   recurUntil DateTime?
-  createdAt  DateTime   @default(now())
+  // Where it happens: an existing gym location, or a one-off free-text place.
+  locationId String?
+  location   GymLocation?  @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  locationText String?
+  // Max participants (null = unlimited).
+  capacity   Int?
+  // Who it is for.
+  audience   EventAudience @default(all)
+  planId     String?
+  plan       Plan?         @relation(fields: [planId], references: [id], onDelete: SetNull)
+  createdAt  DateTime      @default(now())
+
+  exceptions EventException[]
 
   @@index([gymId, startsAt])
+}
+
+// Per-occurrence override of a recurring Event: cancel one date or change its
+// details without touching the rest of the series. Matched by originalDate.
+model EventException {
+  id           String    @id @default(cuid())
+  eventId      String
+  event        Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  originalDate DateTime // the occurrence's scheduled start being overridden
+  canceled     Boolean   @default(false)
+  title        String?
+  notes        String?
+  startsAt     DateTime?
+  endsAt       DateTime?
+  locationId   String?
+  locationText String?
+  capacity     Int?
+  createdAt    DateTime  @default(now())
+
+  @@unique([eventId, originalDate])
+  @@index([eventId])
 }
 
 model ClientDocument {
@@ -185,6 +241,8 @@ model GymLocation {
   phone       String?
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
+
+  events Event[]
 
   @@index([gymId])
 }
@@ -243,6 +301,8 @@ model Client {
   activatedAt       DateTime?
   assignedTrainerId String?
   assignedTrainer   Membership?  @relation("TrainerClients", fields: [assignedTrainerId], references: [id], onDelete: SetNull)
+  planId            String?
+  plan              Plan?        @relation(fields: [planId], references: [id], onDelete: SetNull)
 
   subscriptionPlan   String?
   subscriptionStatus String    @default("none")

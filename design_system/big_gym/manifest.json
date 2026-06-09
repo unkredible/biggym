@@ -1,0 +1,170 @@
+{
+  "name": "Big Gym design system assets",
+  "format": "WEBP lossless with alpha",
+  "reference": "C:\\Users\\info\\Downloads\\ChatGPT Image 9 giu 2026, 22_10_40.png",
+  "palette": {
+    "ink": "#030912",
+    "panel": "#0e1823",
+    "white": "#f8fafc",
+    "blue": "#125dff",
+    "lime": "#aee808",
+    "coral": "#ff5239",
+    "cyan": "#57d2d4"
+  },
+  "assets": [
+    {
+      "file": "logo-mark.webp",
+      "size": [
+        512,
+        512
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "logo-wordmark-horizontal.webp",
+      "size": [
+        1280,
+        420
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "logo-wordmark-stacked.webp",
+      "size": [
+        720,
+        720
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "logo-app-icon.webp",
+      "size": [
+        512,
+        512
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "illustration-hero-lunge.webp",
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "illustration-workout-push.webp",
+      "size": [
+        960,
+        640
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "illustration-workout-pull.webp",
+      "size": [
+        960,
+        640
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "illustration-workout-legs.webp",
+      "size": [
+        960,
+        640
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "illustration-workout-full-body.webp",
+      "size": [
+        960,
+        640
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "illustration-nutrition-bowl.webp",
+      "size": [
+        720,
+        720
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "illustration-progress-rings.webp",
+      "size": [
+        720,
+        720
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "illustration-achievement-badges.webp",
+      "size": [
+        900,
+        620
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "decor-dots-blue.webp",
+      "size": [
+        420,
+        180
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "decor-waves-cyan.webp",
+      "size": [
+        520,
+        220
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    }
+  ]
+}

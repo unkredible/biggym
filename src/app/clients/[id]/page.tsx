@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import ClientDocs from "./ClientDocs";
 import ClientEditForm from "./ClientEditForm";
 import TrainerSelect from "./TrainerSelect";
+import PlanSelect from "./PlanSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -29,15 +30,23 @@ export default async function ClientDetailPage({
       onboardingStatus: true,
       userId: true,
       assignedTrainerId: true,
+      planId: true,
     },
   });
   if (!client) notFound();
 
-  const trainers = await prisma.membership.findMany({
-    where: { gymId: ctx.gymId, role: { in: ["trainer", "gym_admin"] }, active: true },
-    orderBy: { fullName: "asc" },
-    select: { id: true, fullName: true, role: true },
-  });
+  const [trainers, plans] = await Promise.all([
+    prisma.membership.findMany({
+      where: { gymId: ctx.gymId, role: { in: ["trainer", "gym_admin"] }, active: true },
+      orderBy: { fullName: "asc" },
+      select: { id: true, fullName: true, role: true },
+    }),
+    prisma.plan.findMany({
+      where: { gymId: ctx.gymId, active: true },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, name: true },
+    }),
+  ]);
 
   return (
     <main>
@@ -68,6 +77,9 @@ export default async function ClientDetailPage({
         trainers={trainers}
         current={client.assignedTrainerId}
       />
+
+      <h2>Plan</h2>
+      <PlanSelect clientId={client.id} plans={plans} current={client.planId} />
 
       <h2>Workout cards</h2>
       <ClientDocs clientId={client.id} />

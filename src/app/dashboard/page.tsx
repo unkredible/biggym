@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { currentContext, isStaffRole, listUserGyms } from "@/lib/gym";
-import { appBaseUrl } from "@/lib/host";
 import GymSwitcher from "./GymSwitcher";
 
 export const dynamic = "force-dynamic";
@@ -83,11 +82,18 @@ export default async function DashboardPage() {
             <span className="lr-value lr-chev">→</span>
           </a>
           {(ctx.isSuper || ctx.role === "gym_admin") && (
-            <a className="list-row" href="/calendar">
-              <span className="lr-icon">📅</span>
-              <span>Calendar <span className="muted">— events &amp; classes</span></span>
-              <span className="lr-value lr-chev">→</span>
-            </a>
+            <>
+              <a className="list-row" href="/calendar">
+                <span className="lr-icon">📅</span>
+                <span>Calendar <span className="muted">— events &amp; classes</span></span>
+                <span className="lr-value lr-chev">→</span>
+              </a>
+              <a className="list-row" href="/plans">
+                <span className="lr-icon">🏷️</span>
+                <span>Plans <span className="muted">— subscription tiers</span></span>
+                <span className="lr-value lr-chev">→</span>
+              </a>
+            </>
           )}
         </div>
       )}
@@ -103,11 +109,6 @@ export default async function DashboardPage() {
         <a className="list-row" href="/settings">
           <span className="lr-icon">⚙</span>
           <span>Settings</span>
-          <span className="lr-value lr-chev">→</span>
-        </a>
-        <a className="list-row" href={`${appBaseUrl()}/onboarding`}>
-          <span className="lr-icon">＋</span>
-          <span>Create another gym</span>
           <span className="lr-value lr-chev">→</span>
         </a>
       </div>
