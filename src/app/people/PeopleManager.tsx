@@ -82,11 +82,11 @@ export default function PeopleManager() {
               <p className="muted" style={{ margin: "0.5rem 0 0.3rem" }}>{g.label}</p>
               <div className="list">
                 {rows.map((s) => (
-                  <div className="list-row" key={s.id}>
+                  <a className="list-row" key={s.id} href={`/staff/${s.id}`}>
                     <span className="lr-icon">{g.role === "gym_admin" ? "★" : g.role === "reception" ? "🛎" : "🏋️"}</span>
                     <span>{s.fullName}<br /><span className="muted">{s.email}</span></span>
-                    <span className="lr-value">{s.role}{s.active ? "" : " · inactive"}</span>
-                  </div>
+                    <span className="lr-value">{s.role}{s.active ? "" : " · inactive"}<span className="lr-chev"> →</span></span>
+                  </a>
                 ))}
               </div>
             </div>
