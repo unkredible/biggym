@@ -3,6 +3,7 @@ import { currentContext, isStaffRole } from "@/lib/gym";
 import { prisma } from "@/lib/db";
 import ClientDocs from "./ClientDocs";
 import ClientEditForm from "./ClientEditForm";
+import TrainerSelect from "./TrainerSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -27,9 +28,16 @@ export default async function ClientDetailPage({
       birthDate: true,
       onboardingStatus: true,
       userId: true,
+      assignedTrainerId: true,
     },
   });
   if (!client) notFound();
+
+  const trainers = await prisma.membership.findMany({
+    where: { gymId: ctx.gymId, role: { in: ["trainer", "gym_admin"] }, active: true },
+    orderBy: { fullName: "asc" },
+    select: { id: true, fullName: true, role: true },
+  });
 
   return (
     <main>
@@ -52,6 +60,13 @@ export default async function ClientDetailPage({
         fiscalCode={client.fiscalCode ?? ""}
         birthDate={client.birthDate ? client.birthDate.toISOString().slice(0, 10) : ""}
         onboardingStatus={client.onboardingStatus}
+      />
+
+      <h2>Trainer</h2>
+      <TrainerSelect
+        clientId={client.id}
+        trainers={trainers}
+        current={client.assignedTrainerId}
       />
 
       <h2>Workout cards</h2>

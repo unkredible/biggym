@@ -82,6 +82,13 @@ export default async function DashboardPage() {
             <span>People <span className="muted">— staff &amp; clients</span></span>
             <span className="lr-value lr-chev">→</span>
           </a>
+          {(ctx.isSuper || ctx.role === "gym_admin") && (
+            <a className="list-row" href="/calendar">
+              <span className="lr-icon">📅</span>
+              <span>Calendar <span className="muted">— events &amp; classes</span></span>
+              <span className="lr-value lr-chev">→</span>
+            </a>
+          )}
         </div>
       )}
 

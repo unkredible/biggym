@@ -133,8 +133,32 @@ model Gym {
   activations  BillableActivation[]
   locations    GymLocation[]
   documents    ClientDocument[]
+  events       Event[]
 
   @@index([slug])
+}
+
+enum Recurrence {
+  none
+  daily
+  weekly
+  monthly
+}
+
+model Event {
+  id         String     @id @default(cuid())
+  gymId      String
+  gym        Gym        @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  title      String
+  notes      String?
+  startsAt   DateTime
+  endsAt     DateTime?
+  allDay     Boolean    @default(false)
+  recurrence Recurrence @default(none)
+  recurUntil DateTime?
+  createdAt  DateTime   @default(now())
+
+  @@index([gymId, startsAt])
 }
 
 model ClientDocument {

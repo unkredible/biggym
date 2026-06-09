@@ -52,6 +52,17 @@ export async function PATCH(
     if (!STATUSES.has(s)) return NextResponse.json({ error: "invalid status" }, { status: 400 });
     data.onboardingStatus = s;
   }
+  if (b.assignedTrainerId !== undefined) {
+    const tid = b.assignedTrainerId ? String(b.assignedTrainerId) : null;
+    if (tid) {
+      const trainer = await prisma.membership.findFirst({
+        where: { id: tid, gymId: ctx.gymId!, role: { in: ["trainer", "gym_admin"] } },
+        select: { id: true },
+      });
+      if (!trainer) return NextResponse.json({ error: "invalid trainer" }, { status: 400 });
+    }
+    data.assignedTrainerId = tid;
+  }
 
   await prisma.client.update({ where: { id: params.id }, data });
   return NextResponse.json({ ok: true });

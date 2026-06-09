@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { currentClient } from "@/lib/gym";
 import { prisma } from "@/lib/db";
+import MyTrainerSelect from "./MyTrainerSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -8,11 +9,18 @@ export default async function MyWorkoutsPage() {
   const client = await currentClient();
   if (!client) redirect("/dashboard");
 
-  const docs = await prisma.clientDocument.findMany({
-    where: { clientId: client.id },
-    orderBy: { createdAt: "desc" },
-    select: { id: true, name: true, createdAt: true },
-  });
+  const [docs, trainers] = await Promise.all([
+    prisma.clientDocument.findMany({
+      where: { clientId: client.id },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, name: true, createdAt: true },
+    }),
+    prisma.membership.findMany({
+      where: { gymId: client.gymId, role: { in: ["trainer", "gym_admin"] }, active: true },
+      orderBy: { fullName: "asc" },
+      select: { id: true, fullName: true },
+    }),
+  ]);
 
   return (
     <main>
@@ -21,6 +29,10 @@ export default async function MyWorkoutsPage() {
         <a href="/dashboard">← dashboard</a>
       </div>
 
+      <h2>Trainer</h2>
+      <MyTrainerSelect trainers={trainers} current={client.assignedTrainerId} />
+
+      <h2>Workout cards</h2>
       {docs.length === 0 ? (
         <p className="muted">No workout card yet. Your trainer will upload one.</p>
       ) : (

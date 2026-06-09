@@ -197,3 +197,21 @@ a.list-row:hover { background: var(--surface-2); opacity: 1; }
 .brandrow img { height: 30px; width: auto; border-radius: 8px; }
 .brandname { font-weight: 800; letter-spacing: -0.02em; font-size: 1.15rem; }
 .brandname .dot { color: var(--accent); }
+
+/* ---- forms + two-column layout (calendar, etc.) ----------------------- */
+.stack { display: flex; flex-direction: column; gap: 0.9rem; }
+.stack label { display: flex; flex-direction: column; gap: 0.35rem; }
+.stack label.row { flex-direction: row; align-items: center; gap: 0.5rem; }
+.stack input, .stack select, .stack textarea { width: 100%; }
+.stack label.row input { width: auto; }
+.grid-2 {
+  display: grid; gap: 1.4rem; align-items: start;
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+.error { color: var(--err); font-size: 0.85rem; margin: 0; }
+button.ghost, .btn.ghost {
+  background: transparent; border-color: transparent;
+  padding: 0.3rem 0.55rem; font-weight: 600;
+}
+button.ghost:hover { background: var(--surface-2); opacity: 1; }
