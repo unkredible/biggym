@@ -10,7 +10,7 @@ export default async function CalendarPage() {
   if (!ctx) redirect("/login");
   if (!ctx.gymId || !(ctx.isSuper || ctx.role === "gym_admin")) redirect("/dashboard");
 
-  const [locations, plans] = await Promise.all([
+  const [locations, plans, trainers] = await Promise.all([
     prisma.gymLocation.findMany({
       where: { gymId: ctx.gymId, active: true },
       orderBy: { createdAt: "asc" },
@@ -21,6 +21,11 @@ export default async function CalendarPage() {
       orderBy: { createdAt: "asc" },
       select: { id: true, name: true },
     }),
+    prisma.membership.findMany({
+      where: { gymId: ctx.gymId, role: { in: ["trainer", "gym_admin"] }, active: true },
+      orderBy: { fullName: "asc" },
+      select: { id: true, fullName: true },
+    }),
   ]);
 
   return (
@@ -30,7 +35,7 @@ export default async function CalendarPage() {
         <a href="/dashboard">← dashboard</a>
       </div>
       <p className="muted">Create one-off or recurring events for your gym.</p>
-      <CalendarManager locations={locations} plans={plans} />
+      <CalendarManager locations={locations} plans={plans} trainers={trainers} />
     </main>
   );
 }

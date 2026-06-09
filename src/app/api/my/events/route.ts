@@ -16,7 +16,7 @@ export async function GET() {
       orderBy: { startsAt: "asc" },
       include: {
         location: { select: { name: true } },
-        plan: { select: { name: true } },
+        plans: { select: { id: true, name: true } },
         exceptions: true,
       },
     }),

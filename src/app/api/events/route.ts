@@ -12,16 +12,31 @@ export async function GET() {
   if (!ctx?.gymId || !isStaffRole(ctx.role)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
-  const events = await prisma.event.findMany({
-    where: { gymId: ctx.gymId },
-    orderBy: { startsAt: "asc" },
-    include: {
-      location: { select: { name: true } },
-      plan: { select: { name: true } },
-      exceptions: true,
-    },
+  const [events, counts] = await Promise.all([
+    prisma.event.findMany({
+      where: { gymId: ctx.gymId },
+      orderBy: { startsAt: "asc" },
+      include: {
+        location: { select: { name: true } },
+        plans: { select: { id: true, name: true } },
+        trainer: { select: { fullName: true } },
+        exceptions: true,
+      },
+    }),
+    prisma.eventBooking.groupBy({
+      by: ["eventId", "occurrenceDate"],
+      where: { event: { gymId: ctx.gymId } },
+      _count: { _all: true },
+    }),
+  ]);
+  return NextResponse.json({
+    events,
+    counts: counts.map((c) => ({
+      eventId: c.eventId,
+      occurrenceDate: c.occurrenceDate,
+      count: c._count._all,
+    })),
   });
-  return NextResponse.json({ events });
 }
 
 /** POST — create an event (gym_admin). */
@@ -72,9 +87,10 @@ export async function POST(req: NextRequest) {
       recurUntil,
       capacity: s.capacity,
       audience: s.audience,
-      planId: s.planId,
+      trainerId: s.trainerId,
       locationId: s.locationId,
       locationText: s.locationText,
+      plans: s.planIds.length ? { connect: s.planIds.map((id) => ({ id })) } : undefined,
     },
   });
   return NextResponse.json({ event });

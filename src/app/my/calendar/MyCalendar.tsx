@@ -9,8 +9,9 @@ interface Exception {
 interface EventRow {
   id: string; title: string; notes: string | null; startsAt: string; endsAt: string | null;
   allDay: boolean; recurrence: "none" | "daily" | "weekly" | "monthly"; recurUntil: string | null;
-  capacity: number | null; audience: "all" | "plan"; planId: string | null;
-  locationText: string | null; location: { name: string } | null; plan: { name: string } | null;
+  capacity: number | null; audience: "all" | "plan";
+  locationText: string | null; location: { name: string } | null;
+  plans: { id: string; name: string }[];
   exceptions: Exception[];
 }
 interface Occ {
@@ -126,7 +127,7 @@ export default function MyCalendar() {
     const key = k(o.event.id, o.baseISO);
     const booked = mine.has(key);
     const count = counts.get(key) ?? 0;
-    const canBook = o.event.audience === "all" || (planId != null && planId === o.event.planId);
+    const canBook = o.event.audience === "all" || (planId != null && o.event.plans.some((p) => p.id === planId));
     const full = o.capacity != null && count >= o.capacity && !booked;
 
     return (
@@ -137,7 +138,7 @@ export default function MyCalendar() {
           <div className="muted">
             {o.locationName && <>📍 {o.locationName} </>}
             {o.capacity != null ? <>· {count}/{o.capacity} </> : count > 0 ? <>· {count} going </> : null}
-            {o.event.audience === "plan" && <>· {o.event.plan?.name ?? "plan"} only</>}
+            {o.event.audience === "plan" && <>· {o.event.plans.map((p) => p.name).join(", ") || "plan"} only</>}
           </div>
           {o.notes && <div className="muted">{o.notes}</div>}
         </div>

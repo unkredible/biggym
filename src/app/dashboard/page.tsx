@@ -1,9 +1,38 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { currentContext, isStaffRole, listUserGyms } from "@/lib/gym";
+import { currentClient, currentContext, isStaffRole, listUserGyms } from "@/lib/gym";
 import GymSwitcher from "./GymSwitcher";
 
 export const dynamic = "force-dynamic";
+
+const REMIND_MS = 8 * 60 * 60 * 1000; // notify 8h before a booked event
+
+/** A client's booked events starting within the next 8 hours. */
+async function upcomingReminders(clientId: string) {
+  const bookings = await prisma.eventBooking.findMany({
+    where: { clientId },
+    include: { event: { include: { exceptions: true, location: { select: { name: true } } } } },
+  });
+  const now = Date.now();
+  const out: { title: string; when: Date; location: string | null }[] = [];
+  for (const bk of bookings) {
+    const ev = bk.event;
+    const ex = ev.exceptions.find(
+      (e) => new Date(e.originalDate).toISOString() === new Date(bk.occurrenceDate).toISOString(),
+    );
+    if (ex?.canceled) continue;
+    const when = ex?.startsAt ? new Date(ex.startsAt) : new Date(bk.occurrenceDate);
+    const diff = when.getTime() - now;
+    if (diff > 0 && diff <= REMIND_MS) {
+      out.push({
+        title: ex?.title ?? ev.title,
+        when,
+        location: ex?.locationText ?? ev.location?.name ?? ev.locationText ?? null,
+      });
+    }
+  }
+  return out.sort((a, b) => a.when.getTime() - b.when.getTime());
+}
 
 export default async function DashboardPage() {
   const ctx = await currentContext();
@@ -18,6 +47,12 @@ export default async function DashboardPage() {
     listUserGyms(ctx.userId),
   ]);
   if (!gym) redirect("/onboarding");
+
+  let reminders: { title: string; when: Date; location: string | null }[] = [];
+  if (ctx.role === "client") {
+    const client = await currentClient();
+    if (client) reminders = await upcomingReminders(client.id);
+  }
 
   return (
     <main>
@@ -54,6 +89,26 @@ export default async function DashboardPage() {
           {ctx.role} · {gym.subscriptionStatus}
         </p>
       </div>
+
+      {reminders.length > 0 && (
+        <div className="list">
+          {reminders.map((r, i) => (
+            <div className="list-row" key={i}>
+              <span className="lr-icon">⏰</span>
+              <span>
+                <strong>Starting soon: {r.title}</strong>
+                <br />
+                <span className="muted">
+                  {r.when.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                  {" · "}
+                  {r.when.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}
+                  {r.location ? ` · ${r.location}` : ""}
+                </span>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {gym.locations.length > 0 && (
         <div className="list">

@@ -9,13 +9,14 @@ export function canAdmin(role: string | null, isSuper: boolean) {
 export type SharedFields = {
   capacity: number | null;
   audience: "all" | "plan";
-  planId: string | null;
+  planIds: string[];
+  trainerId: string | null;
   locationId: string | null;
   locationText: string | null;
 };
 
-/** Validate + normalise the audience/plan/location/capacity payload shared by
- *  event create + series edit. Returns `{ error }` on bad input. */
+/** Validate + normalise the audience/plans/trainer/location/capacity payload
+ *  shared by event create + series edit. Returns `{ error }` on bad input. */
 export async function sharedEventFields(
   b: Record<string, unknown>,
   gymId: string,
@@ -28,13 +29,24 @@ export async function sharedEventFields(
   }
 
   const audience = b.audience === "plan" ? "plan" : "all";
-  let planId: string | null = audience === "plan" && b.planId ? String(b.planId) : null;
+  let planIds: string[] = [];
   if (audience === "plan") {
-    if (!planId) return { error: "Pick a plan for this audience." };
-    const plan = await prisma.plan.findFirst({ where: { id: planId, gymId }, select: { id: true } });
-    if (!plan) return { error: "Invalid plan." };
+    const raw = Array.isArray(b.planIds) ? b.planIds : [];
+    planIds = [...new Set(raw.map((x) => String(x)).filter(Boolean))];
+    if (planIds.length === 0) return { error: "Pick at least one plan." };
+    const found = await prisma.plan.count({ where: { id: { in: planIds }, gymId } });
+    if (found !== planIds.length) return { error: "Invalid plan." };
+  }
+
+  let trainerId: string | null = b.trainerId ? String(b.trainerId) : null;
+  if (trainerId) {
+    const t = await prisma.membership.findFirst({
+      where: { id: trainerId, gymId, role: { in: ["trainer", "gym_admin"] } },
+      select: { id: true },
+    });
+    if (!t) return { error: "Invalid trainer." };
   } else {
-    planId = null;
+    trainerId = null;
   }
 
   const locationId: string | null = b.locationId ? String(b.locationId) : null;
@@ -48,5 +60,5 @@ export async function sharedEventFields(
     locationText = null; // a real location wins over free text
   }
 
-  return { capacity, audience, planId, locationId, locationText };
+  return { capacity, audience, planIds, trainerId, locationId, locationText };
 }

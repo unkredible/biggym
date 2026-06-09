@@ -163,7 +163,7 @@ model Plan {
   createdAt  DateTime @default(now())
 
   clients Client[]
-  events  Event[]
+  events  Event[] @relation("EventPlans")
 
   @@index([gymId])
 }
@@ -185,10 +185,12 @@ model Event {
   locationText String?
   // Max participants (null = unlimited).
   capacity   Int?
-  // Who it is for.
+  // Who it is for: all clients, or holders of any of the linked plans.
   audience   EventAudience @default(all)
-  planId     String?
-  plan       Plan?         @relation(fields: [planId], references: [id], onDelete: SetNull)
+  plans      Plan[]        @relation("EventPlans")
+  // The trainer running it (sees + exports the roster).
+  trainerId  String?
+  trainer    Membership?   @relation("EventTrainer", fields: [trainerId], references: [id], onDelete: SetNull)
   createdAt  DateTime      @default(now())
 
   exceptions EventException[]
@@ -280,6 +282,7 @@ model Membership {
   assignedClients Client[]         @relation("TrainerClients")
   programs        WorkoutProgram[]
   events          ClientEvent[]
+  eventsLed       Event[]          @relation("EventTrainer")
 
   // One membership per user per gym; a user can belong to many gyms.
   @@unique([userId, gymId])

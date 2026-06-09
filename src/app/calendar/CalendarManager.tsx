@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
 interface Loc { id: string; name: string }
 interface Plan { id: string; name: string }
+interface Trainer { id: string; fullName: string }
 
 interface Exception {
   id: string;
@@ -29,11 +30,12 @@ interface EventRow {
   recurUntil: string | null;
   capacity: number | null;
   audience: "all" | "plan";
-  planId: string | null;
+  trainerId: string | null;
   locationId: string | null;
   locationText: string | null;
   location: { name: string } | null;
-  plan: { name: string } | null;
+  plans: { id: string; name: string }[];
+  trainer: { fullName: string } | null;
   exceptions: Exception[];
 }
 
@@ -83,8 +85,13 @@ function dayKey(d: Date) {
   return d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 }
 
-export default function CalendarManager({ locations, plans }: { locations: Loc[]; plans: Plan[] }) {
+const ckey = (eventId: string, baseISO: string) => `${eventId}|${baseISO}`;
+
+export default function CalendarManager(
+  { locations, plans, trainers }: { locations: Loc[]; plans: Plan[]; trainers: Trainer[] },
+) {
   const [events, setEvents] = useState<EventRow[]>([]);
+  const [counts, setCounts] = useState<Map<string, number>>(new Map());
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -106,7 +113,8 @@ export default function CalendarManager({ locations, plans }: { locations: Loc[]
   const [recurUntil, setRecurUntil] = useState("");
   const [capacity, setCapacity] = useState("");
   const [audience, setAudience] = useState<"all" | "plan">("all");
-  const [planId, setPlanId] = useState("");
+  const [planIds, setPlanIds] = useState<string[]>([]);
+  const [trainerId, setTrainerId] = useState("");
   const [locMode, setLocMode] = useState<"none" | "existing" | "other">("none");
   const [locationId, setLocationId] = useState("");
   const [locationText, setLocationText] = useState("");
@@ -116,7 +124,12 @@ export default function CalendarManager({ locations, plans }: { locations: Loc[]
   async function load() {
     setLoading(true);
     const res = await fetch("/api/events");
-    if (res.ok) setEvents((await res.json()).events ?? []);
+    if (res.ok) {
+      const j = await res.json();
+      setEvents(j.events ?? []);
+      setCounts(new Map((j.counts ?? []).map((c: { eventId: string; occurrenceDate: string; count: number }) =>
+        [ckey(c.eventId, new Date(c.occurrenceDate).toISOString()), c.count] as [string, number])));
+    }
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
@@ -164,7 +177,7 @@ export default function CalendarManager({ locations, plans }: { locations: Loc[]
     setMode("create"); setEditId(""); setEditDate("");
     setTitle(""); setNotes(""); setDate(""); setStartTime("18:00"); setEndTime("");
     setAllDay(false); setRecurrence("none"); setRecurUntil("");
-    setCapacity(""); setAudience("all"); setPlanId("");
+    setCapacity(""); setAudience("all"); setPlanIds([]); setTrainerId("");
     setLocMode("none"); setLocationId(""); setLocationText("");
     setErr("");
   }
@@ -184,7 +197,7 @@ export default function CalendarManager({ locations, plans }: { locations: Loc[]
     setAllDay(ev.allDay); setRecurrence(ev.recurrence);
     setRecurUntil(ev.recurUntil ? toDateStr(new Date(ev.recurUntil)) : "");
     setCapacity(ev.capacity != null ? String(ev.capacity) : "");
-    setAudience(ev.audience); setPlanId(ev.planId ?? "");
+    setAudience(ev.audience); setPlanIds(ev.plans.map((p) => p.id)); setTrainerId(ev.trainerId ?? "");
     fillLocationFrom(ev.locationId, ev.locationText);
     setErr("");
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -214,7 +227,7 @@ export default function CalendarManager({ locations, plans }: { locations: Loc[]
     setErr("");
     if (!title.trim()) return setErr("Title required.");
     if (!date) return setErr("Date required.");
-    if (audience === "plan" && !planId) return setErr("Pick a plan.");
+    if (audience === "plan" && planIds.length === 0) return setErr("Pick at least one plan.");
 
     const startsAt = combine(date, allDay ? "00:00" : startTime || "00:00");
     const endsAt = !allDay && endTime ? combine(date, endTime) : null;
@@ -237,7 +250,9 @@ export default function CalendarManager({ locations, plans }: { locations: Loc[]
         title: title.trim(), notes: notes.trim() || null,
         startsAt, endsAt, allDay, recurrence,
         recurUntil: recurrence !== "none" && recurUntil ? recurUntil : null,
-        capacity: capacity || null, audience, planId: audience === "plan" ? planId : null,
+        capacity: capacity || null, audience,
+        planIds: audience === "plan" ? planIds : [],
+        trainerId: trainerId || null,
         ...loc,
       };
       res = mode === "series"
@@ -332,19 +347,37 @@ export default function CalendarManager({ locations, plans }: { locations: Loc[]
 
           {!occurrenceMode && (
             <>
+              <label>Trainer
+                <select value={trainerId} onChange={(e) => setTrainerId(e.target.value)}>
+                  <option value="">— none —</option>
+                  {trainers.map((t) => <option key={t.id} value={t.id}>{t.fullName}</option>)}
+                </select>
+              </label>
               <label>Open to
                 <select value={audience} onChange={(e) => setAudience(e.target.value as "all" | "plan")}>
                   <option value="all">All clients</option>
-                  <option value="plan">A specific plan</option>
+                  <option value="plan">Specific plans</option>
                 </select>
               </label>
               {audience === "plan" && (
-                <label>Plan
-                  <select value={planId} onChange={(e) => setPlanId(e.target.value)}>
-                    <option value="">Pick a plan…</option>
-                    {plans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                </label>
+                <div className="field">
+                  <label>Plans (one or more)</label>
+                  <div className="stack" style={{ gap: "0.3rem" }}>
+                    {plans.length === 0 && <span className="muted">No plans yet — create some under Plans.</span>}
+                    {plans.map((p) => (
+                      <label key={p.id} className="row" style={{ gap: "0.45rem" }}>
+                        <input
+                          type="checkbox"
+                          checked={planIds.includes(p.id)}
+                          onChange={(e) =>
+                            setPlanIds((cur) => e.target.checked ? [...cur, p.id] : cur.filter((x) => x !== p.id))
+                          }
+                        />
+                        {p.name}
+                      </label>
+                    ))}
+                  </div>
+                </div>
               )}
               <label>Repeat
                 <select value={recurrence} onChange={(e) => setRecurrence(e.target.value as EventRow["recurrence"])}>
@@ -383,6 +416,7 @@ export default function CalendarManager({ locations, plans }: { locations: Loc[]
                   {g.items.map((o, i) => {
                     const ev = o.event;
                     const recurring = ev.recurrence !== "none";
+                    const booked = counts.get(ckey(ev.id, o.baseISO)) ?? 0;
                     return (
                       <div className="row spread" key={o.event.id + i} style={o.canceled ? { opacity: 0.5 } : undefined}>
                         <div>
@@ -394,9 +428,21 @@ export default function CalendarManager({ locations, plans }: { locations: Loc[]
                           </span>
                           <div className="muted">
                             {o.locationName && <>📍 {o.locationName} </>}
-                            {o.capacity != null && <>· max {o.capacity} </>}
-                            {ev.audience === "plan" && <>· {ev.plan?.name ?? "plan"} only</>}
+                            · {o.capacity != null ? `${booked}/${o.capacity}` : `${booked} booked`}{" "}
+                            {ev.trainer && <>· 🧑‍🏫 {ev.trainer.fullName} </>}
+                            {ev.audience === "plan" && <>· {ev.plans.map((p) => p.name).join(", ") || "plan"} only</>}
                           </div>
+                          {!o.canceled && (
+                            <a
+                              className="muted"
+                              style={{ fontSize: "0.8rem" }}
+                              href={`/api/events/${ev.id}/roster?date=${encodeURIComponent(o.baseISO)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              ⬇ roster PDF
+                            </a>
+                          )}
                           {o.notes && <div className="muted">{o.notes}</div>}
                         </div>
                         <div className="row" style={{ gap: "0.2rem" }}>

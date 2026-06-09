@@ -67,9 +67,10 @@ export async function PATCH(
       recurUntil,
       capacity: s.capacity,
       audience: s.audience,
-      planId: s.planId,
+      trainerId: s.trainerId,
       locationId: s.locationId,
       locationText: s.locationText,
+      plans: { set: s.planIds.map((id) => ({ id })) },
     },
   });
   return NextResponse.json({ ok: true });

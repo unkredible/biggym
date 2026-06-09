@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
   const event = await prisma.event.findFirst({
     where: { id: p.eventId, gymId: client.gymId },
-    include: { exceptions: true },
+    include: { exceptions: true, plans: { select: { id: true } } },
   });
   if (!event) return NextResponse.json({ error: "not found" }, { status: 404 });
 
@@ -39,12 +39,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "This date was cancelled." }, { status: 409 });
   }
 
-  // Audience: plan-restricted events require a matching client plan.
-  if (event.audience === "plan" && client.planId !== event.planId) {
-    return NextResponse.json(
-      { error: "Your plan doesn't include this event." },
-      { status: 403 },
-    );
+  // Audience: plan-restricted events require the client to hold one of the
+  // linked plans.
+  if (event.audience === "plan") {
+    const ok = client.planId != null && event.plans.some((pl) => pl.id === client.planId);
+    if (!ok) {
+      return NextResponse.json(
+        { error: "Your plan doesn't include this event." },
+        { status: 403 },
+      );
+    }
   }
 
   // Capacity (per-occurrence override wins).
