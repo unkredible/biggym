@@ -132,8 +132,23 @@ model Gym {
   staffInvites StaffInvite[]
   activations  BillableActivation[]
   locations    GymLocation[]
+  documents    ClientDocument[]
 
   @@index([slug])
+}
+
+model ClientDocument {
+  id          String   @id @default(cuid())
+  gymId       String
+  gym         Gym      @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name        String
+  contentType String
+  createdAt   DateTime @default(now())
+
+  @@index([clientId])
+  @@index([gymId])
 }
 
 model GymLocation {
@@ -221,6 +236,7 @@ model Client {
   events      ClientEvent[]
   logs        WorkoutLog[]
   activations BillableActivation[]
+  documents   ClientDocument[]
 
   @@index([gymId])
   @@index([gymId, onboardingStatus])

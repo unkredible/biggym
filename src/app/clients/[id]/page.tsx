@@ -1,7 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { currentContext, isStaffRole } from "@/lib/gym";
 import { prisma } from "@/lib/db";
-import ProgramEditor from "./ProgramEditor";
+import ClientDocs from "./ClientDocs";
 import ClientEditForm from "./ClientEditForm";
 
 export const dynamic = "force-dynamic";
@@ -54,8 +54,8 @@ export default async function ClientDetailPage({
         onboardingStatus={client.onboardingStatus}
       />
 
-      <h2>Workout program</h2>
-      <ProgramEditor clientId={client.id} />
+      <h2>Workout cards</h2>
+      <ClientDocs clientId={client.id} />
     </main>
   );
 }
