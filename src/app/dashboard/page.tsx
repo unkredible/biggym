@@ -99,9 +99,17 @@ export default async function DashboardPage() {
       )}
 
       {ctx.role === "client" && (
-        <div className="card">
-          <h3>Training</h3>
-          <a href="/my/workouts">My workouts →</a>
+        <div className="list">
+          <a className="list-row" href="/my/calendar">
+            <span className="lr-icon">📅</span>
+            <span>Calendar <span className="muted">— classes &amp; events</span></span>
+            <span className="lr-value lr-chev">→</span>
+          </a>
+          <a className="list-row" href="/my/workouts">
+            <span className="lr-icon">🏋️</span>
+            <span>My workouts <span className="muted">— cards &amp; trainer</span></span>
+            <span className="lr-value lr-chev">→</span>
+          </a>
         </div>
       )}
 

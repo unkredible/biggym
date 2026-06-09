@@ -192,8 +192,25 @@ model Event {
   createdAt  DateTime      @default(now())
 
   exceptions EventException[]
+  bookings   EventBooking[]
 
   @@index([gymId, startsAt])
+}
+
+// A client's signup for one occurrence of an event. occurrenceDate is the
+// occurrence's base scheduled start (matches EventException.originalDate).
+model EventBooking {
+  id             String   @id @default(cuid())
+  eventId        String
+  event          Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  clientId       String
+  client         Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  occurrenceDate DateTime
+  createdAt      DateTime @default(now())
+
+  @@unique([eventId, occurrenceDate, clientId])
+  @@index([eventId, occurrenceDate])
+  @@index([clientId])
 }
 
 // Per-occurrence override of a recurring Event: cancel one date or change its
@@ -321,6 +338,7 @@ model Client {
   logs        WorkoutLog[]
   activations BillableActivation[]
   documents   ClientDocument[]
+  bookings    EventBooking[]
 
   @@index([gymId])
   @@index([gymId, onboardingStatus])

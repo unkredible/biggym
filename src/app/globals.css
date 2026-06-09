@@ -215,3 +215,26 @@ button.ghost, .btn.ghost {
   padding: 0.3rem 0.55rem; font-weight: 600;
 }
 button.ghost:hover { background: var(--surface-2); opacity: 1; }
+
+/* ---- client calendar (list / week / month) ---------------------------- */
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 0.4rem 0.95rem; background: transparent; font-weight: 600; }
+.seg button.on { background: var(--accent); color: var(--accent-ink); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cal-dow { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-align: center; padding-bottom: 2px; }
+.cal-cell { min-height: 84px; border: 1px solid var(--border); border-radius: 10px; padding: 4px 6px; background: var(--surface); }
+.cal-cell.dim { opacity: 0.4; }
+.cal-cell.today { border-color: var(--accent); }
+.cal-cell .d { font-size: 0.75rem; font-weight: 700; color: var(--muted); }
+.cal-chip {
+  display: block; width: 100%; text-align: left; font-size: 0.72rem;
+  padding: 2px 6px; margin-top: 3px; border-radius: 6px; cursor: pointer;
+  background: var(--accent-soft); color: var(--accent); border: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cal-chip.mine { background: var(--accent); color: var(--accent-ink); }
+.cal-chip.off { background: var(--surface-2); color: var(--muted); }
+@media (max-width: 640px) {
+  .cal-cell { min-height: 58px; }
+  .cal-chip { font-size: 0.64rem; }
+}
