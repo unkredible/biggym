@@ -253,3 +253,76 @@ button.ghost:hover { background: var(--surface-2); opacity: 1; }
   .cal-cell { min-height: 58px; }
   .cal-chip { font-size: 0.64rem; }
 }
+
+/* ---- client mobile app shell (topbar + drawer + bottom tabbar) -------- */
+.has-tabbar main { padding-bottom: 6rem; }
+
+.appshell-top {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+  padding: 0.7rem 1rem;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.iconbtn {
+  position: relative; display: inline-grid; place-items: center;
+  width: 42px; height: 42px; padding: 0; border-radius: 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--fg); font-size: 1.1rem; cursor: pointer; text-decoration: none;
+}
+.badge-dot {
+  position: absolute; top: 7px; right: 8px;
+  width: 9px; height: 9px; border-radius: 999px;
+  background: var(--coral); border: 2px solid var(--surface);
+}
+
+.drawer { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, 0.5); }
+.drawer-panel {
+  position: absolute; top: 0; left: 0; bottom: 0; width: min(82vw, 320px);
+  background: var(--surface); border-right: 1px solid var(--border);
+  padding: 1.1rem; display: flex; flex-direction: column; gap: 0.45rem;
+  box-shadow: var(--shadow);
+}
+.drawer-link {
+  display: block; padding: 0.85rem 0.9rem; border-radius: 14px;
+  color: var(--fg); font-weight: 600; background: var(--surface-2);
+}
+.drawer-link:hover { opacity: 1; background: var(--accent-soft); }
+
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px;
+  padding: 0.4rem 0.5rem calc(0.4rem + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+}
+.tab {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 0.35rem 0; border-radius: 12px;
+  color: var(--muted); font-weight: 600; text-decoration: none;
+}
+.tab .tab-ic { font-size: 1.15rem; line-height: 1; filter: grayscale(0.4); opacity: 0.8; }
+.tab .tab-lb { font-size: 0.66rem; letter-spacing: 0.01em; }
+.tab.on { color: var(--accent); }
+.tab.on .tab-ic { filter: none; opacity: 1; }
+
+/* ---- client dashboard hero + stat tiles ------------------------------- */
+.greet {
+  font-family: var(--font-display), sans-serif; font-weight: 800;
+  letter-spacing: -0.03em; line-height: 1.04;
+  font-size: clamp(1.7rem, 7vw, 2.2rem); margin: 0.2rem 0 0.1rem;
+}
+.stat-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin: 0.85rem 0; }
+.tile {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 18px; padding: 0.75rem 0.7rem;
+}
+.tile .ic { font-size: 1.05rem; }
+.tile .v {
+  font-family: var(--font-display), sans-serif; font-weight: 800;
+  font-size: 1.35rem; line-height: 1.1; margin-top: 0.2rem;
+}
+.tile .lb { color: var(--muted); font-size: 0.72rem; }
+.tile .sub { color: var(--muted); font-size: 0.68rem; }

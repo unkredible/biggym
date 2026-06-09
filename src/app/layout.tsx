@@ -3,8 +3,11 @@ import { headers } from "next/headers";
 import { Archivo, Inter } from "next/font/google";
 import { prisma } from "@/lib/db";
 import { isAppHost } from "@/lib/host";
-import { currentContext } from "@/lib/gym";
+import { currentContext, currentClient, clientUpcomingBookings } from "@/lib/gym";
+import ClientChrome from "@/components/ClientChrome";
 import "./globals.css";
+
+const SOON_MS = 8 * 60 * 60 * 1000;
 
 const display = Archivo({
   subsets: ["latin"],
@@ -31,6 +34,8 @@ interface Brand {
   logoUrl: string | null;
   onApp: boolean;
   loggedIn: boolean;
+  role: string | null;
+  hasAlerts: boolean;
 }
 
 async function getBrand(): Promise<Brand> {
@@ -41,6 +46,8 @@ async function getBrand(): Promise<Brand> {
     logoUrl: null,
     onApp: false,
     loggedIn: false,
+    role: null,
+    hasAlerts: false,
   };
   try {
     const host = headers().get("host");
@@ -51,13 +58,17 @@ async function getBrand(): Promise<Brand> {
     // Gym branding (logo/theme) is applied ONLY in the client's view. Staff and
     // owners (who may manage several gyms) always see the neutral biggym brand.
     if (!ctx?.gymId || ctx.role !== "client") {
-      return { ...defaults, onApp, loggedIn };
+      return { ...defaults, onApp, loggedIn, role: ctx?.role ?? null };
     }
-    const gym = await prisma.gym.findUnique({
-      where: { id: ctx.gymId },
-      select: { appName: true, theme: true, themeMode: true, logoUrl: true },
-    });
-    if (!gym) return { ...defaults, onApp, loggedIn };
+    const [gym, client] = await Promise.all([
+      prisma.gym.findUnique({
+        where: { id: ctx.gymId },
+        select: { appName: true, theme: true, themeMode: true, logoUrl: true },
+      }),
+      currentClient(),
+    ]);
+    const hasAlerts = client ? (await clientUpcomingBookings(client.id, SOON_MS)).length > 0 : false;
+    if (!gym) return { ...defaults, onApp, loggedIn, role: "client", hasAlerts };
     return {
       appName: gym.appName,
       theme: gym.theme,
@@ -65,6 +76,8 @@ async function getBrand(): Promise<Brand> {
       logoUrl: gym.logoUrl,
       onApp,
       loggedIn,
+      role: "client",
+      hasAlerts,
     };
   } catch {
     return defaults;
@@ -77,6 +90,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const brand = await getBrand();
+  const isClient = brand.onApp && brand.role === "client";
 
   return (
     <html
@@ -85,37 +99,41 @@ export default async function RootLayout({
       data-mode={brand.themeMode}
       className={`${display.variable} ${body.variable}`}
     >
-      <body>
-        {brand.onApp && (
-          <div className="appbar">
-            <a href={brand.loggedIn ? "/dashboard" : "/login"} className="brandrow">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={brand.loggedIn && brand.logoUrl ? brand.logoUrl : "/brand/logo-mark.webp"}
-                alt={brand.appName ?? "BIG GYM"}
-              />
-              <span className="brandname">
-                {brand.loggedIn && brand.appName ? (
-                  brand.appName
-                ) : (
-                  <>
-                    BIG <span className="dot">GYM</span>
-                  </>
-                )}
-              </span>
-            </a>
-            {brand.loggedIn ? (
-              <a href="/logout" className="muted" style={{ fontWeight: 600 }}>
-                Log out
+      <body className={isClient ? "has-tabbar" : ""}>
+        {isClient ? (
+          <ClientChrome hasAlerts={brand.hasAlerts} />
+        ) : (
+          brand.onApp && (
+            <div className="appbar">
+              <a href={brand.loggedIn ? "/dashboard" : "/login"} className="brandrow">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={brand.loggedIn && brand.logoUrl ? brand.logoUrl : "/brand/logo-mark.webp"}
+                  alt={brand.appName ?? "BIG GYM"}
+                />
+                <span className="brandname">
+                  {brand.loggedIn && brand.appName ? (
+                    brand.appName
+                  ) : (
+                    <>
+                      BIG <span className="dot">GYM</span>
+                    </>
+                  )}
+                </span>
               </a>
-            ) : (
-              <a href="/login">
-                <button className="primary" style={{ padding: "0.4rem 1.1rem" }}>
-                  Log in
-                </button>
-              </a>
-            )}
-          </div>
+              {brand.loggedIn ? (
+                <a href="/logout" className="muted" style={{ fontWeight: 600 }}>
+                  Log out
+                </a>
+              ) : (
+                <a href="/login">
+                  <button className="primary" style={{ padding: "0.4rem 1.1rem" }}>
+                    Log in
+                  </button>
+                </a>
+              )}
+            </div>
+          )
         )}
         {children}
       </body>

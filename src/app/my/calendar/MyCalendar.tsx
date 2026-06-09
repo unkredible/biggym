@@ -90,6 +90,7 @@ export default function MyCalendar() {
       const exMap = new Map(ev.exceptions.map((e) => [new Date(e.originalDate).toISOString(), e]));
       for (const b of baseDates(ev, from, to)) {
         const ex = exMap.get(b.toISOString());
+        if (ex?.canceled) continue; // cancelled dates are hidden, not struck
         out.push({
           event: ev, baseISO: b.toISOString(),
           at: ex?.startsAt ? new Date(ex.startsAt) : b,

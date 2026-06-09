@@ -97,3 +97,46 @@ export async function currentClient() {
     where: { userId: ctx.userId, gymId: ctx.gymId },
   });
 }
+
+const SOON_MS = 8 * 60 * 60 * 1000; // "starting soon" window
+
+export interface UpcomingBooking {
+  id: string;
+  title: string;
+  when: Date;
+  location: string | null;
+  soon: boolean;
+}
+
+/** A client's future booked occurrences (cancelled dates are dropped entirely).
+ *  Pass `withinMs` to limit how far ahead to look. Sorted soonest-first. */
+export async function clientUpcomingBookings(
+  clientId: string,
+  withinMs?: number,
+): Promise<UpcomingBooking[]> {
+  const bookings = await prisma.eventBooking.findMany({
+    where: { clientId },
+    include: { event: { include: { exceptions: true, location: { select: { name: true } } } } },
+  });
+  const now = Date.now();
+  const out: UpcomingBooking[] = [];
+  for (const bk of bookings) {
+    const ev = bk.event;
+    const ex = ev.exceptions.find(
+      (e) => new Date(e.originalDate).toISOString() === new Date(bk.occurrenceDate).toISOString(),
+    );
+    if (ex?.canceled) continue; // cancelled = gone, never shown to the client
+    const when = ex?.startsAt ? new Date(ex.startsAt) : new Date(bk.occurrenceDate);
+    const diff = when.getTime() - now;
+    if (diff <= 0) continue; // future only
+    if (withinMs != null && diff > withinMs) continue;
+    out.push({
+      id: bk.id,
+      title: ex?.title ?? ev.title,
+      when,
+      location: ex?.locationText ?? ev.location?.name ?? ev.locationText ?? null,
+      soon: diff <= SOON_MS,
+    });
+  }
+  return out.sort((a, b) => a.when.getTime() - b.when.getTime());
+}

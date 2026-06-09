@@ -1,37 +1,18 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { currentClient, currentContext, isStaffRole, listUserGyms } from "@/lib/gym";
+import {
+  currentClient,
+  clientUpcomingBookings,
+  currentContext,
+  isStaffRole,
+  listUserGyms,
+} from "@/lib/gym";
 import GymSwitcher from "./GymSwitcher";
 
 export const dynamic = "force-dynamic";
 
-const REMIND_MS = 8 * 60 * 60 * 1000; // notify 8h before a booked event
-
-/** A client's booked events starting within the next 8 hours. */
-async function upcomingReminders(clientId: string) {
-  const bookings = await prisma.eventBooking.findMany({
-    where: { clientId },
-    include: { event: { include: { exceptions: true, location: { select: { name: true } } } } },
-  });
-  const now = Date.now();
-  const out: { title: string; when: Date; location: string | null }[] = [];
-  for (const bk of bookings) {
-    const ev = bk.event;
-    const ex = ev.exceptions.find(
-      (e) => new Date(e.originalDate).toISOString() === new Date(bk.occurrenceDate).toISOString(),
-    );
-    if (ex?.canceled) continue;
-    const when = ex?.startsAt ? new Date(ex.startsAt) : new Date(bk.occurrenceDate);
-    const diff = when.getTime() - now;
-    if (diff > 0 && diff <= REMIND_MS) {
-      out.push({
-        title: ex?.title ?? ev.title,
-        when,
-        location: ex?.locationText ?? ev.location?.name ?? ev.locationText ?? null,
-      });
-    }
-  }
-  return out.sort((a, b) => a.when.getTime() - b.when.getTime());
+function timeLabel(d: Date) {
+  return `${d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · ${d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`;
 }
 
 export default async function DashboardPage() {
@@ -39,6 +20,68 @@ export default async function DashboardPage() {
   if (!ctx) redirect("/login");
   if (!ctx.gymId) redirect("/onboarding"); // no gym yet → sign up
 
+  // -------------------------------------------------------------- client app
+  if (ctx.role === "client") {
+    const client = await currentClient();
+    if (!client) redirect("/onboarding");
+    const first = (client.fullName || "").trim().split(/\s+/)[0] || "atleta";
+    const booked = (await clientUpcomingBookings(client.id)).slice(0, 6);
+
+    return (
+      <main>
+        <h1 className="greet">Ciao {first}! 👋</h1>
+        <p className="muted">Forza, conquistiamo i tuoi obiettivi oggi 💪</p>
+
+        <div className="card accent">
+          <p className="muted" style={{ margin: 0 }}>Progresso giornaliero</p>
+          <div className="row spread" style={{ marginTop: "0.2rem" }}>
+            <span style={{ fontSize: "2.1rem", fontWeight: 800, lineHeight: 1 }}>—</span>
+            <span style={{ fontSize: "1.7rem" }}>🏋️</span>
+          </div>
+          <p className="muted" style={{ margin: "0.3rem 0 0" }}>Presto disponibile</p>
+        </div>
+
+        <div className="stat-tiles">
+          <div className="tile"><div className="ic">🔥</div><div className="v">—</div><div className="lb">Calorie</div></div>
+          <div className="tile"><div className="ic">👟</div><div className="v">—</div><div className="lb">Passi</div></div>
+          <div className="tile"><div className="ic">⏱️</div><div className="v">—</div><div className="lb">Tempo attivo</div></div>
+        </div>
+
+        <h2>I tuoi eventi</h2>
+        {booked.length === 0 ? (
+          <p className="muted">
+            Non sei iscritto a nessun evento.{" "}
+            <a href="/my/calendar">Sfoglia il calendario →</a>
+          </p>
+        ) : (
+          <div className="list">
+            {booked.map((b) => (
+              <div className="list-row" key={b.id}>
+                <span className="lr-icon">{b.soon ? "⏰" : "📅"}</span>
+                <span>
+                  <strong>{b.title}</strong>
+                  <br />
+                  <span className="muted">
+                    {timeLabel(b.when)}
+                    {b.location ? ` · ${b.location}` : ""}
+                  </span>
+                </span>
+                {b.soon && <span className="lr-value" style={{ color: "var(--coral)" }}>a breve</span>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <a href="/my/workouts">
+          <button className="btn" style={{ width: "100%", marginTop: "1.2rem", padding: "0.95rem" }}>
+            Inizia allenamento →
+          </button>
+        </a>
+      </main>
+    );
+  }
+
+  // --------------------------------------------------------------- staff app
   const [gym, gyms] = await Promise.all([
     prisma.gym.findUnique({
       where: { id: ctx.gymId },
@@ -47,12 +90,6 @@ export default async function DashboardPage() {
     listUserGyms(ctx.userId),
   ]);
   if (!gym) redirect("/onboarding");
-
-  let reminders: { title: string; when: Date; location: string | null }[] = [];
-  if (ctx.role === "client") {
-    const client = await currentClient();
-    if (client) reminders = await upcomingReminders(client.id);
-  }
 
   return (
     <main>
@@ -89,26 +126,6 @@ export default async function DashboardPage() {
           {ctx.role} · {gym.subscriptionStatus}
         </p>
       </div>
-
-      {reminders.length > 0 && (
-        <div className="list">
-          {reminders.map((r, i) => (
-            <div className="list-row" key={i}>
-              <span className="lr-icon">⏰</span>
-              <span>
-                <strong>Starting soon: {r.title}</strong>
-                <br />
-                <span className="muted">
-                  {r.when.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
-                  {" · "}
-                  {r.when.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}
-                  {r.location ? ` · ${r.location}` : ""}
-                </span>
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
 
       {gym.locations.length > 0 && (
         <div className="list">
@@ -150,21 +167,6 @@ export default async function DashboardPage() {
               </a>
             </>
           )}
-        </div>
-      )}
-
-      {ctx.role === "client" && (
-        <div className="list">
-          <a className="list-row" href="/my/calendar">
-            <span className="lr-icon">📅</span>
-            <span>Calendar <span className="muted">— classes &amp; events</span></span>
-            <span className="lr-value lr-chev">→</span>
-          </a>
-          <a className="list-row" href="/my/workouts">
-            <span className="lr-icon">🏋️</span>
-            <span>My workouts <span className="muted">— cards &amp; trainer</span></span>
-            <span className="lr-value lr-chev">→</span>
-          </a>
         </div>
       )}
 
