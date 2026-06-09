@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { Space_Grotesk, Inter } from "next/font/google";
+import { Archivo, Inter } from "next/font/google";
 import { prisma } from "@/lib/db";
 import { isAppHost } from "@/lib/host";
 import { currentContext } from "@/lib/gym";
 import "./globals.css";
 
-const display = Space_Grotesk({
+const display = Archivo({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["600", "700", "800"],
   variable: "--font-display",
   display: "swap",
 });
@@ -19,8 +19,9 @@ const body = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "biggym",
-  description: "Gym management made simple — clients, workout programs, billing.",
+  title: "BIG GYM — Train Big. Live Bigger.",
+  description: "Your all-in-one fitness partner: training, classes, nutrition and progress.",
+  icons: { icon: "/brand/logo-app-icon.webp" },
 };
 
 interface Brand {
@@ -35,7 +36,7 @@ interface Brand {
 async function getBrand(): Promise<Brand> {
   const defaults: Brand = {
     appName: null,
-    theme: "emerald",
+    theme: "biggym",
     themeMode: "dark",
     logoUrl: null,
     onApp: false,
@@ -88,16 +89,17 @@ export default async function RootLayout({
         {brand.onApp && (
           <div className="appbar">
             <a href={brand.loggedIn ? "/dashboard" : "/login"} className="brandrow">
-              {brand.loggedIn && brand.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={brand.logoUrl} alt={brand.appName ?? "logo"} />
-              ) : null}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={brand.loggedIn && brand.logoUrl ? brand.logoUrl : "/brand/logo-mark.webp"}
+                alt={brand.appName ?? "BIG GYM"}
+              />
               <span className="brandname">
                 {brand.loggedIn && brand.appName ? (
                   brand.appName
                 ) : (
                   <>
-                    big<span className="dot">gym</span>
+                    BIG <span className="dot">GYM</span>
                   </>
                 )}
               </span>

@@ -19,8 +19,12 @@ export default async function PortalHome() {
     <main>
       {/* Nav */}
       <nav className="lp-nav">
-        <span className="brandname" style={{ fontSize: "1.3rem" }}>
-          big<span style={{ color: "var(--accent)" }}>gym</span>
+        <span className="brandrow">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/logo-mark.webp" alt="BIG GYM" style={{ height: 34 }} />
+          <span className="brandname" style={{ fontSize: "1.35rem" }}>
+            BIG <span className="dot">GYM</span>
+          </span>
         </span>
         <div className="row" style={{ gap: "0.6rem" }}>
           {loggedIn ? (
@@ -157,7 +161,7 @@ export default async function PortalHome() {
 
       <footer className="lp-foot">
         <div className="row spread">
-          <span>biggym © {new Date().getFullYear()}</span>
+          <span>BIG GYM © {new Date().getFullYear()}</span>
           <a href={login} className="muted">Log in</a>
         </div>
       </footer>

@@ -8,30 +8,38 @@
   --radius-sm: 14px;
   --maxw: 880px;
 
-  /* Dark mode surfaces (default) */
-  --bg: #0e1622;
-  --surface: #18222f;
-  --surface-2: #212d3d;
-  --fg: #f2f5f8;
-  --muted: #93a2b6;
-  --border: rgba(255, 255, 255, 0.09);
-  --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-  --err: #f87171;
+  /* ---- BIG GYM brand palette ---- */
+  --blue:  #125dff; --blue-ink:  #eaf1ff; --blue-soft:  rgba(18, 93, 255, 0.16);
+  --lime:  #aee808; --lime-ink:  #0b1500; --lime-soft:  rgba(174, 232, 8, 0.18);
+  --coral: #ff5239; --coral-ink: #ffffff; --coral-soft: rgba(255, 82, 57, 0.16);
+  --cyan:  #57d2d4;
+
+  /* Dark mode surfaces (default): ink background + panel cards */
+  --bg: #030912;
+  --surface: #0e1823;
+  --surface-2: #16222f;
+  --fg: #f8fafc;
+  --muted: #8aa0b6;
+  --border: rgba(255, 255, 255, 0.08);
+  --shadow: 0 10px 34px rgba(0, 0, 0, 0.45);
+  --err: #ff6b6b;
 }
 
 [data-mode="light"] {
-  --bg: #f4f1ea;
+  --bg: #f3f5f8;
   --surface: #ffffff;
-  --surface-2: #efeadf;
-  --fg: #14181d;
-  --muted: #677083;
-  --border: rgba(0, 0, 0, 0.08);
-  --shadow: 0 8px 28px rgba(20, 24, 29, 0.08);
+  --surface-2: #eef1f6;
+  --fg: #0b1622;
+  --muted: #5d6b7e;
+  --border: rgba(3, 9, 18, 0.08);
+  --shadow: 0 10px 30px rgba(3, 9, 18, 0.07);
   --err: #dc2626;
 }
 
-/* ---- 5 colour presets (accent + ink + soft tint) ---------------------- */
+/* Interactive accent = brand blue by default (the neutral biggym look). The
+   per-gym colour presets below override --accent only inside a client's view. */
 :root,
+[data-theme="biggym"]  { --accent: var(--blue); --accent-ink: var(--blue-ink); --accent-soft: var(--blue-soft); }
 [data-theme="emerald"] { --accent: #a8e80c; --accent-ink: #10240a; --accent-soft: rgba(168,232,12,0.16); }
 [data-theme="crimson"] { --accent: #fb5a4b; --accent-ink: #2a0907; --accent-soft: rgba(251,90,75,0.16); }
 [data-theme="ocean"]   { --accent: #3b82f6; --accent-ink: #04132e; --accent-soft: rgba(59,130,246,0.16); }
@@ -58,8 +66,8 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 1.5rem 1.1rem 4rem; }
 h1, h2, h3, .brandname {
   font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
 }
-h1 { font-size: clamp(1.9rem, 5vw, 2.7rem); font-weight: 700; letter-spacing: -0.035em; line-height: 1.05; margin: 0 0 0.35rem; }
-h2 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; margin: 1.7rem 0 0.6rem; }
+h1 { font-size: clamp(1.95rem, 5vw, 2.8rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.03; margin: 0 0 0.35rem; }
+h2 { font-size: 1.42rem; font-weight: 800; letter-spacing: -0.025em; margin: 1.7rem 0 0.6rem; }
 h3 { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 0.4rem; }
 strong { font-weight: 600; }
 
@@ -109,7 +117,10 @@ button, .btn {
 }
 button:hover { opacity: 0.9; }
 button:active { transform: translateY(1px); }
-button.primary { background: var(--accent); color: var(--accent-ink); border: 0; }
+/* BIG GYM CTAs: lime primary, coral / blue variants. */
+button.primary, .btn { background: var(--lime); color: var(--lime-ink); border: 0; font-weight: 800; }
+button.coral, .btn.coral { background: var(--coral); color: var(--coral-ink); border: 0; }
+button.blue,  .btn.blue  { background: var(--blue);  color: var(--blue-ink);  border: 0; }
 button.danger { background: transparent; color: var(--err); border-color: var(--err); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -193,10 +204,14 @@ a.list-row:hover { background: var(--surface-2); opacity: 1; }
   gap: 0.8rem; max-width: var(--maxw); margin: 0 auto;
   padding: 1rem 1.1rem 0;
 }
-.brandrow { display: flex; align-items: center; gap: 0.6rem; }
+.brandrow { display: flex; align-items: center; gap: 0.55rem; }
 .brandrow img { height: 30px; width: auto; border-radius: 8px; }
-.brandname { font-weight: 800; letter-spacing: -0.02em; font-size: 1.15rem; }
-.brandname .dot { color: var(--accent); }
+.brandname {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800; font-size: 1.2rem;
+  letter-spacing: -0.01em; text-transform: uppercase;
+}
+.brandname .dot { color: var(--blue); }
 
 /* ---- forms + two-column layout (calendar, etc.) ----------------------- */
 .stack { display: flex; flex-direction: column; gap: 0.9rem; }
