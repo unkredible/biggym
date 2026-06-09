@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const RECUR = new Set(["none", "daily", "weekly", "monthly"]);
 
-function canAdmin(role: string, isSuper: boolean) {
+function canAdmin(role: string | null, isSuper: boolean) {
   return isSuper || role === "gym_admin";
 }
 
