@@ -47,7 +47,11 @@ async function getBrand(): Promise<Brand> {
     if (!onApp) return defaults;
     const ctx = await currentContext();
     const loggedIn = !!ctx;
-    if (!ctx?.gymId) return { ...defaults, onApp, loggedIn };
+    // Gym branding (logo/theme) is applied ONLY in the client's view. Staff and
+    // owners (who may manage several gyms) always see the neutral biggym brand.
+    if (!ctx?.gymId || ctx.role !== "client") {
+      return { ...defaults, onApp, loggedIn };
+    }
     const gym = await prisma.gym.findUnique({
       where: { id: ctx.gymId },
       select: { appName: true, theme: true, themeMode: true, logoUrl: true },
