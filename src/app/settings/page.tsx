@@ -30,7 +30,6 @@ export default async function SettingsPage() {
     <main>
       <div className="row spread">
         <h1>Settings</h1>
-        <a href="/dashboard">← dashboard</a>
       </div>
 
       {/* ---- Account (everyone) ---- */}

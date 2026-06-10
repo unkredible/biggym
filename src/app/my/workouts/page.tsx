@@ -26,7 +26,6 @@ export default async function MyWorkoutsPage() {
     <main>
       <div className="row spread">
         <h1>My workouts</h1>
-        <a href="/dashboard">← dashboard</a>
       </div>
 
       <h2>Trainer</h2>

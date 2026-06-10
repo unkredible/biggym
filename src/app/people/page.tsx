@@ -13,7 +13,6 @@ export default async function PeoplePage() {
     <main>
       <div className="row spread">
         <h1>People</h1>
-        <a href="/dashboard">← dashboard</a>
       </div>
       <p className="muted">Staff and clients, grouped by permission.</p>
       <PeopleManager />

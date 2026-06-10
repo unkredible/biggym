@@ -17,7 +17,6 @@ export default async function NotificationsPage() {
     <main>
       <div className="row spread">
         <h1>Notifiche</h1>
-        <a href="/dashboard">← dashboard</a>
       </div>
 
       {items.length === 0 ? (

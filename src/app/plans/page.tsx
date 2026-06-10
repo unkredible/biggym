@@ -13,7 +13,6 @@ export default async function PlansPage() {
     <main>
       <div className="row spread">
         <h1>Plans</h1>
-        <a href="/dashboard">← dashboard</a>
       </div>
       <p className="muted">Subscription plans clients can be assigned to. Events can target a single plan.</p>
       <PlansManager />

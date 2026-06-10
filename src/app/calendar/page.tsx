@@ -32,7 +32,6 @@ export default async function CalendarPage() {
     <main>
       <div className="row spread">
         <h1>Calendar</h1>
-        <a href="/dashboard">← dashboard</a>
       </div>
       <p className="muted">Create one-off or recurring events for your gym.</p>
       <CalendarManager locations={locations} plans={plans} trainers={trainers} />

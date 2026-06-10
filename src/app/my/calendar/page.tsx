@@ -12,7 +12,6 @@ export default async function MyCalendarPage() {
     <main>
       <div className="row spread">
         <h1>Calendar</h1>
-        <a href="/dashboard">← dashboard</a>
       </div>
       <p className="muted">Browse classes &amp; events and sign up. Events outside your plan are shown but not bookable.</p>
       <MyCalendar />
