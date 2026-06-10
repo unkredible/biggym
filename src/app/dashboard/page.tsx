@@ -25,56 +25,114 @@ export default async function DashboardPage() {
     const client = await currentClient();
     if (!client) redirect("/onboarding");
     const first = (client.fullName || "").trim().split(/\s+/)[0] || "atleta";
-    const booked = (await clientUpcomingBookings(client.id)).slice(0, 6);
+    const booked = await clientUpcomingBookings(client.id);
+    const next = booked[0] ?? null;
+    const rest = booked.slice(1, 6);
+
+    const hour = Number(
+      new Date().toLocaleString("en-GB", { hour: "2-digit", hour12: false, timeZone: "Europe/Rome" }),
+    );
+    const hello = hour < 12 ? "Buongiorno," : hour < 18 ? "Buon pomeriggio," : "Buonasera,";
+
+    const R = 33;
+    const C = 2 * Math.PI * R;
+    const pct = 0; // daily progress — wired to real data later
 
     return (
       <main>
-        <h1 className="greet">Ciao {first}! 👋</h1>
-        <p className="muted">Forza, conquistiamo i tuoi obiettivi oggi 💪</p>
+        <p className="greet-small">{hello}</p>
+        <h1 className="greet">{first}! 👋</h1>
+        <p className="muted" style={{ marginTop: 0 }}>Forza, conquistiamo i tuoi obiettivi oggi.</p>
 
-        <div className="card accent">
-          <p className="muted" style={{ margin: 0 }}>Progresso giornaliero</p>
-          <div className="row spread" style={{ marginTop: "0.2rem" }}>
-            <span style={{ fontSize: "2.1rem", fontWeight: 800, lineHeight: 1 }}>—</span>
-            <span style={{ fontSize: "1.7rem" }}>🏋️</span>
+        <div className="hero-card">
+          <div>
+            <p className="hl">Progresso giornaliero</p>
+            <div className="hv">—%</div>
           </div>
-          <p className="muted" style={{ margin: "0.3rem 0 0" }}>Presto disponibile</p>
+          <svg className="ring" viewBox="0 0 80 80" width="78" height="78" aria-hidden>
+            <circle cx="40" cy="40" r={R} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="9" />
+            <circle
+              cx="40" cy="40" r={R} fill="none"
+              stroke="var(--lime)" strokeWidth="9" strokeLinecap="round"
+              strokeDasharray={`${C * pct} ${C}`}
+              transform="rotate(-90 40 40)"
+            />
+            <text x="40" y="48" textAnchor="middle" fontSize="22">🏋️</text>
+          </svg>
         </div>
 
         <div className="stat-tiles">
-          <div className="tile"><div className="ic">🔥</div><div className="v">—</div><div className="lb">Calorie</div></div>
-          <div className="tile"><div className="ic">👟</div><div className="v">—</div><div className="lb">Passi</div></div>
-          <div className="tile"><div className="ic">⏱️</div><div className="v">—</div><div className="lb">Tempo attivo</div></div>
+          <div className="tile">
+            <span className="ic coral">🔥</span>
+            <div className="v">—</div>
+            <div className="lb">Calorie</div>
+            <div className="sub">kcal oggi</div>
+          </div>
+          <div className="tile">
+            <span className="ic blue">👟</span>
+            <div className="v">—</div>
+            <div className="lb">Passi</div>
+            <div className="sub">/10.000</div>
+          </div>
+          <div className="tile">
+            <span className="ic cyan">⏱️</span>
+            <div className="v">—</div>
+            <div className="lb">Attività</div>
+            <div className="sub">/90 min</div>
+          </div>
         </div>
 
-        <h2>I tuoi eventi</h2>
-        {booked.length === 0 ? (
-          <p className="muted">
-            Non sei iscritto a nessun evento.{" "}
-            <a href="/my/calendar">Sfoglia il calendario →</a>
-          </p>
-        ) : (
-          <div className="list">
-            {booked.map((b) => (
-              <div className="list-row" key={b.id}>
-                <span className="lr-icon">{b.soon ? "⏰" : "📅"}</span>
-                <span>
-                  <strong>{b.title}</strong>
-                  <br />
-                  <span className="muted">
-                    {timeLabel(b.when)}
-                    {b.location ? ` · ${b.location}` : ""}
-                  </span>
-                </span>
-                {b.soon && <span className="lr-value" style={{ color: "var(--coral)" }}>a breve</span>}
+        <div className="section-h">Prossimo evento</div>
+        {next ? (
+          <div className="next-card">
+            <div style={{ minWidth: 0 }}>
+              <div className="nt">{next.title}</div>
+              {next.location && <div className="muted">{next.location}</div>}
+              <div className="chiprow">
+                <span className="chip">🕐 {next.when.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</span>
+                <span className="chip">📅 {next.when.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}</span>
+                {next.soon && <span className="chip" style={{ color: "var(--coral)" }}>⏰ a breve</span>}
               </div>
-            ))}
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/illustration-workout-push.webp" alt="" />
+          </div>
+        ) : (
+          <div className="next-card">
+            <div>
+              <div className="nt">Nessun evento</div>
+              <div className="muted">Iscriviti a una classe dal calendario.</div>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/illustration-workout-push.webp" alt="" style={{ opacity: 0.5 }} />
           </div>
         )}
 
-        <a href="/my/workouts">
-          <button className="btn" style={{ width: "100%", marginTop: "1.2rem", padding: "0.95rem" }}>
-            Inizia allenamento →
+        {rest.length > 0 && (
+          <>
+            <div className="section-h">I tuoi eventi</div>
+            <div className="list">
+              {rest.map((b) => (
+                <div className="list-row" key={b.id}>
+                  <span className="lr-icon">{b.soon ? "⏰" : "📅"}</span>
+                  <span>
+                    <strong>{b.title}</strong>
+                    <br />
+                    <span className="muted">
+                      {timeLabel(b.when)}
+                      {b.location ? ` · ${b.location}` : ""}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        <a href={next ? "/my/calendar" : "/my/workouts"} style={{ display: "block" }}>
+          <button className="cta-big">
+            <span>{next ? "Vai al calendario" : "Inizia allenamento"}</span>
+            <span className="arr">→</span>
           </button>
         </a>
       </main>
