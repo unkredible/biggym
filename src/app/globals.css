@@ -286,9 +286,11 @@ button.ghost:hover { background: var(--surface-2); opacity: 1; }
   box-shadow: var(--shadow);
 }
 .drawer-link {
-  display: block; padding: 0.85rem 0.9rem; border-radius: 14px;
+  display: flex; align-items: center; gap: 0.65rem;
+  padding: 0.85rem 0.9rem; border-radius: 14px;
   color: var(--fg); font-weight: 600; background: var(--surface-2);
 }
+.drawer-link svg { color: var(--muted); }
 .drawer-link:hover { opacity: 1; background: var(--accent-soft); }
 
 .tabbar {
@@ -304,10 +306,12 @@ button.ghost:hover { background: var(--surface-2); opacity: 1; }
   padding: 0.35rem 0; border-radius: 12px;
   color: var(--muted); font-weight: 600; text-decoration: none;
 }
-.tab .tab-ic { font-size: 1.15rem; line-height: 1; filter: grayscale(0.4); opacity: 0.8; }
+.tab .tab-ic { line-height: 0; opacity: 0.75; }
+.tab .tab-ic svg { width: 21px; height: 21px; }
 .tab .tab-lb { font-size: 0.66rem; letter-spacing: 0.01em; }
 .tab.on { color: var(--accent); }
-.tab.on .tab-ic { filter: none; opacity: 1; }
+.tab.on .tab-ic { opacity: 1; }
+.tab.on .tab-ic svg { stroke-width: 2.2; }
 
 /* ---- client dashboard hero + stat tiles ------------------------------- */
 .greet-small {
@@ -342,12 +346,13 @@ button.ghost:hover { background: var(--surface-2); opacity: 1; }
 }
 .tile .ic {
   display: inline-grid; place-items: center;
-  width: 36px; height: 36px; border-radius: 999px; font-size: 1rem;
+  width: 36px; height: 36px; border-radius: 999px; line-height: 0;
   margin-bottom: 0.35rem;
 }
-.tile .ic.coral { background: var(--coral-soft); }
-.tile .ic.blue  { background: var(--blue-soft); }
-.tile .ic.cyan  { background: rgba(87, 210, 212, 0.16); }
+.tile .ic.coral { background: var(--coral); color: #fff; }
+.tile .ic.blue  { background: var(--blue); color: #fff; }
+.tile .ic.cyan  { background: var(--cyan); color: #07282a; }
+.chip svg { flex: 0 0 auto; }
 .tile .v {
   font-family: var(--font-display), sans-serif; font-weight: 800;
   font-size: 1.35rem; line-height: 1.1;

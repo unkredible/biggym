@@ -66,18 +66,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   session: { strategy: "jwt" },
   // Share the session cookie across the portal + app subdomains so a single
-  // login works on both biggym.<base> and app.biggym.<base>.
+  // login works on both biggym.<base> and app.biggym.<base>. In local dev
+  // (http://app.localhost) drop the Secure/domain bits so the cookie sticks.
   cookies: {
-    sessionToken: {
-      name: "__Secure-authjs.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: true,
-        domain: cookieDomain(),
-      },
-    },
+    sessionToken:
+      process.env.NODE_ENV === "production"
+        ? {
+            name: "__Secure-authjs.session-token",
+            options: {
+              httpOnly: true,
+              sameSite: "lax",
+              path: "/",
+              secure: true,
+              domain: cookieDomain(),
+            },
+          }
+        : {
+            name: "authjs.session-token",
+            options: { httpOnly: true, sameSite: "lax", path: "/", secure: false },
+          },
   },
   providers,
   pages: {

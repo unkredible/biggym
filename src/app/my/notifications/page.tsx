@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { currentClient, clientUpcomingBookings } from "@/lib/gym";
+import { IconClock, IconCalendar } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,7 @@ export default async function NotificationsPage() {
         <div className="list">
           {items.map((b) => (
             <div className="list-row" key={b.id}>
-              <span className="lr-icon">{b.soon ? "⏰" : "📅"}</span>
+              <span className="lr-icon">{b.soon ? <IconClock width={16} height={16} /> : <IconCalendar width={16} height={16} />}</span>
               <span>
                 <strong>{b.soon ? "Tra poco: " : ""}{b.title}</strong>
                 <br />

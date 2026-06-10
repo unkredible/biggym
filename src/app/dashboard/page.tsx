@@ -8,6 +8,9 @@ import {
   listUserGyms,
 } from "@/lib/gym";
 import GymSwitcher from "./GymSwitcher";
+import {
+  IconFlame, IconSteps, IconClock, IconCalendar, IconArrowRight,
+} from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -57,25 +60,35 @@ export default async function DashboardPage() {
               strokeDasharray={`${C * pct} ${C}`}
               transform="rotate(-90 40 40)"
             />
-            <text x="40" y="48" textAnchor="middle" fontSize="22">🏋️</text>
+            {/* dumbbell glyph, white stroke, centred */}
+            <g
+              transform="translate(23.2 23.2) scale(1.4)"
+              stroke="#fff" strokeWidth="1.8" fill="none"
+              strokeLinecap="round" strokeLinejoin="round"
+            >
+              <path d="M8.5 12h7" />
+              <rect x="4.5" y="8.5" width="3" height="7" rx="1" />
+              <rect x="16.5" y="8.5" width="3" height="7" rx="1" />
+              <path d="M2.5 10.5v3M21.5 10.5v3" />
+            </g>
           </svg>
         </div>
 
         <div className="stat-tiles">
           <div className="tile">
-            <span className="ic coral">🔥</span>
+            <span className="ic coral"><IconFlame width={18} height={18} /></span>
             <div className="v">—</div>
             <div className="lb">Calorie</div>
             <div className="sub">kcal oggi</div>
           </div>
           <div className="tile">
-            <span className="ic blue">👟</span>
+            <span className="ic blue"><IconSteps width={18} height={18} /></span>
             <div className="v">—</div>
             <div className="lb">Passi</div>
             <div className="sub">/10.000</div>
           </div>
           <div className="tile">
-            <span className="ic cyan">⏱️</span>
+            <span className="ic cyan"><IconClock width={18} height={18} /></span>
             <div className="v">—</div>
             <div className="lb">Attività</div>
             <div className="sub">/90 min</div>
@@ -89,9 +102,9 @@ export default async function DashboardPage() {
               <div className="nt">{next.title}</div>
               {next.location && <div className="muted">{next.location}</div>}
               <div className="chiprow">
-                <span className="chip">🕐 {next.when.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</span>
-                <span className="chip">📅 {next.when.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}</span>
-                {next.soon && <span className="chip" style={{ color: "var(--coral)" }}>⏰ a breve</span>}
+                <span className="chip"><IconClock width={13} height={13} /> {next.when.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</span>
+                <span className="chip"><IconCalendar width={13} height={13} /> {next.when.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}</span>
+                {next.soon && <span className="chip" style={{ color: "var(--coral)" }}><IconClock width={13} height={13} /> a breve</span>}
               </div>
             </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -114,7 +127,7 @@ export default async function DashboardPage() {
             <div className="list">
               {rest.map((b) => (
                 <div className="list-row" key={b.id}>
-                  <span className="lr-icon">{b.soon ? "⏰" : "📅"}</span>
+                  <span className="lr-icon">{b.soon ? <IconClock width={16} height={16} /> : <IconCalendar width={16} height={16} />}</span>
                   <span>
                     <strong>{b.title}</strong>
                     <br />
@@ -132,7 +145,7 @@ export default async function DashboardPage() {
         <a href={next ? "/my/calendar" : "/my/workouts"} style={{ display: "block" }}>
           <button className="cta-big">
             <span>{next ? "Vai al calendario" : "Inizia allenamento"}</span>
-            <span className="arr">→</span>
+            <span className="arr"><IconArrowRight width={18} height={18} /></span>
           </button>
         </a>
       </main>

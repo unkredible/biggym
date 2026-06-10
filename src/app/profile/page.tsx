@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { currentClient } from "@/lib/gym";
+import {
+  IconUser, IconFlame, IconTrophy, IconChart, IconDumbbell, IconSettings, IconLogout,
+} from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +21,7 @@ export default async function ProfilePage() {
 
       <div className="card">
         <div className="row" style={{ gap: "0.9rem" }}>
-          <span className="lr-icon" style={{ width: 56, height: 56, fontSize: "1.6rem", flex: "0 0 56px" }}>👤</span>
+          <span className="lr-icon" style={{ width: 56, height: 56, flex: "0 0 56px" }}><IconUser width={26} height={26} /></span>
           <span>
             <strong style={{ fontSize: "1.15rem" }}>{client.fullName}</strong>
             <br />
@@ -28,9 +31,9 @@ export default async function ProfilePage() {
       </div>
 
       <div className="stat-tiles">
-        <div className="tile"><div className="ic">🏅</div><div className="v">—</div><div className="lb">Livello</div></div>
-        <div className="tile"><div className="ic">🔥</div><div className="v">—</div><div className="lb">Streak</div></div>
-        <div className="tile"><div className="ic">🏆</div><div className="v">—</div><div className="lb">Obiettivi</div></div>
+        <div className="tile"><span className="ic blue"><IconChart width={18} height={18} /></span><div className="v">—</div><div className="lb">Livello</div></div>
+        <div className="tile"><span className="ic coral"><IconFlame width={18} height={18} /></span><div className="v">—</div><div className="lb">Streak</div></div>
+        <div className="tile"><span className="ic cyan"><IconTrophy width={18} height={18} /></span><div className="v">—</div><div className="lb">Obiettivi</div></div>
       </div>
 
       <h2>Traguardi</h2>
@@ -40,17 +43,17 @@ export default async function ProfilePage() {
 
       <div className="list" style={{ marginTop: "1.2rem" }}>
         <a className="list-row" href="/my/workouts">
-          <span className="lr-icon">🏋️</span>
+          <span className="lr-icon"><IconDumbbell width={16} height={16} /></span>
           <span>Le mie schede</span>
           <span className="lr-value lr-chev">→</span>
         </a>
         <a className="list-row" href="/settings">
-          <span className="lr-icon">⚙️</span>
+          <span className="lr-icon"><IconSettings width={16} height={16} /></span>
           <span>Impostazioni profilo</span>
           <span className="lr-value lr-chev">→</span>
         </a>
         <a className="list-row" href="/logout">
-          <span className="lr-icon">🚪</span>
+          <span className="lr-icon"><IconLogout width={16} height={16} /></span>
           <span>Esci</span>
           <span className="lr-value lr-chev">→</span>
         </a>

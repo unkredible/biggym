@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { currentClient } from "@/lib/gym";
+import { IconDumbbell, IconFlame, IconClock } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -13,9 +14,9 @@ export default async function ProgressPage() {
       <p className="muted">Il riepilogo dei tuoi allenamenti, presto qui 📈</p>
 
       <div className="stat-tiles">
-        <div className="tile"><div className="ic">🏋️</div><div className="v">—</div><div className="lb">Allenamenti</div></div>
-        <div className="tile"><div className="ic">🔥</div><div className="v">—</div><div className="lb">Calorie</div></div>
-        <div className="tile"><div className="ic">⏱️</div><div className="v">—</div><div className="lb">Minuti</div></div>
+        <div className="tile"><span className="ic blue"><IconDumbbell width={18} height={18} /></span><div className="v">—</div><div className="lb">Allenamenti</div></div>
+        <div className="tile"><span className="ic coral"><IconFlame width={18} height={18} /></span><div className="v">—</div><div className="lb">Calorie</div></div>
+        <div className="tile"><span className="ic cyan"><IconClock width={18} height={18} /></span><div className="v">—</div><div className="lb">Minuti</div></div>
       </div>
 
       <div className="card">
