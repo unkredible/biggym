@@ -3,6 +3,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { prisma } from "@/lib/db";
 import { currentContext, isStaffRole } from "@/lib/gym";
+import { clientCards } from "@/lib/cards";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,6 +29,7 @@ export async function GET(
 ) {
   const ok = await staffClient(params.id);
   if (!ok) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  await clientCards(params.id); // applies the 12-month retention policy
   const documents = await prisma.clientDocument.findMany({
     where: { clientId: params.id },
     orderBy: { createdAt: "desc" },

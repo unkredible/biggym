@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { currentClient } from "@/lib/gym";
-import { IconDumbbell, IconFlame, IconClock } from "@/components/icons";
+import { IconDumbbell, IconFlame, IconClock, IconChart } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -10,8 +10,13 @@ export default async function ProgressPage() {
 
   return (
     <main>
-      <h1>Progressi</h1>
-      <p className="muted">Il riepilogo dei tuoi allenamenti, presto qui 📈</p>
+      <div className="section-hero">
+        <span className="sh-ic"><IconChart width={26} height={26} /></span>
+        <div>
+          <div className="sh-t">Progressi</div>
+          <div className="sh-s">Il riepilogo dei tuoi allenamenti, presto qui</div>
+        </div>
+      </div>
 
       <div className="stat-tiles">
         <div className="tile"><span className="ic blue"><IconDumbbell width={18} height={18} /></span><div className="v">—</div><div className="lb">Allenamenti</div></div>

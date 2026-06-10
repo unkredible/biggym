@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { currentClient, clientUpcomingBookings } from "@/lib/gym";
-import { IconClock, IconCalendar } from "@/components/icons";
+import { IconClock, IconCalendar, IconBell } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -15,8 +15,12 @@ export default async function NotificationsPage() {
 
   return (
     <main>
-      <div className="row spread">
-        <h1>Notifiche</h1>
+      <div className="section-hero">
+        <span className="sh-ic"><IconBell width={26} height={26} /></span>
+        <div>
+          <div className="sh-t">Notifiche</div>
+          <div className="sh-s">Promemoria dei tuoi eventi prenotati</div>
+        </div>
       </div>
 
       {items.length === 0 ? (

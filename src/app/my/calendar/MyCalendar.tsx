@@ -145,15 +145,15 @@ export default function MyCalendar() {
         </div>
         <div>
           {o.canceled ? (
-            <span className="muted">cancelled</span>
+            <span className="muted">annullato</span>
           ) : booked ? (
-            <button className="ghost" onClick={() => cancel(o)}>Cancel</button>
+            <button className="ghost btn-sm" onClick={() => cancel(o)}>Annulla</button>
           ) : !canBook ? (
-            <button disabled title="Not included in your plan">Plan only</button>
+            <button className="btn-sm" disabled title="Non incluso nel tuo piano">Solo piano</button>
           ) : full ? (
-            <button disabled>Full</button>
+            <button className="btn-sm" disabled>Pieno</button>
           ) : (
-            <button className="btn primary" onClick={() => book(o)}>Sign up</button>
+            <button className="primary btn-sm" onClick={() => book(o)}>Iscriviti</button>
           )}
         </div>
       </div>

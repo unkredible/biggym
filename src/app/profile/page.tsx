@@ -1,33 +1,45 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { currentClient } from "@/lib/gym";
+import { currentClient, currentContext } from "@/lib/gym";
 import {
-  IconUser, IconFlame, IconTrophy, IconChart, IconDumbbell, IconSettings, IconLogout,
+  IconFlame, IconTrophy, IconChart, IconDumbbell, IconSettings, IconLogout,
 } from "@/components/icons";
+import AvatarUpload from "./AvatarUpload";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
-  const client = await currentClient();
-  if (!client) redirect("/dashboard");
+  const [client, ctx] = await Promise.all([currentClient(), currentContext()]);
+  if (!client || !ctx) redirect("/dashboard");
 
-  const plan = client.planId
-    ? await prisma.plan.findUnique({ where: { id: client.planId }, select: { name: true } })
-    : null;
+  const [plan, user] = await Promise.all([
+    client.planId
+      ? prisma.plan.findUnique({ where: { id: client.planId }, select: { name: true } })
+      : null,
+    prisma.user.findUnique({ where: { id: ctx.userId }, select: { image: true } }),
+  ]);
+
+  const memberSince = client.createdAt.toLocaleDateString("it-IT", {
+    month: "long",
+    year: "numeric",
+  });
 
   return (
     <main>
-      <h1>Il mio profilo</h1>
-
-      <div className="card">
-        <div className="row" style={{ gap: "0.9rem" }}>
-          <span className="lr-icon" style={{ width: 56, height: 56, flex: "0 0 56px" }}><IconUser width={26} height={26} /></span>
-          <span>
-            <strong style={{ fontSize: "1.15rem" }}>{client.fullName}</strong>
-            <br />
-            <span className="muted">{plan ? plan.name : "Nessun piano"}</span>
-          </span>
+      {/* profile hero — avatar (tap to upload), name, level bar, gear */}
+      <div className="section-hero" style={{ alignItems: "flex-start" }}>
+        <AvatarUpload src={user?.image ?? null} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="sh-t">{client.fullName}</div>
+          <div className="sh-s" style={{ color: "var(--accent)" }}>
+            {plan ? plan.name : "Nessun piano"} · Livello —
+          </div>
+          <div className="xpbar"><i style={{ width: "0%" }} /></div>
+          <div className="sh-s">— / — XP</div>
         </div>
+        <a className="sh-end iconbtn" href="/settings" aria-label="Impostazioni">
+          <IconSettings />
+        </a>
       </div>
 
       <div className="stat-tiles">
@@ -57,6 +69,11 @@ export default async function ProfilePage() {
           <span>Esci</span>
           <span className="lr-value lr-chev">→</span>
         </a>
+      </div>
+
+      <div className="card accent" style={{ marginTop: "1.2rem" }}>
+        <p className="muted" style={{ margin: 0 }}>Membro da {memberSince}</p>
+        <h3 style={{ margin: "0.2rem 0 0" }}>Continua così. I risultati arrivano. 💪</h3>
       </div>
     </main>
   );
