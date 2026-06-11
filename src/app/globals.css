@@ -235,6 +235,8 @@ button.ghost:hover { background: var(--surface-2); opacity: 1; }
 .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
 .seg button { border: 0; border-radius: 0; padding: 0.4rem 0.95rem; background: transparent; font-weight: 600; }
 .seg button.on { background: var(--accent); color: var(--accent-ink); }
+.seg.view-switch { width: 100%; }
+.seg.view-switch button { flex: 1; padding: 0.55rem 0; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; width: 100%; }
 .cal-dow { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-align: center; padding-bottom: 2px; min-width: 0; }
 .cal-cell { min-width: 0; min-height: 84px; border: 1px solid var(--border); border-radius: 10px; padding: 4px 5px; background: var(--surface); }

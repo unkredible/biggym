@@ -2,7 +2,7 @@
 
 import { useState, type ComponentType, type SVGProps } from "react";
 import { usePathname } from "next/navigation";
-import ViewToggle from "@/components/ViewToggle";
+import ViewSwitch from "@/components/ViewSwitch";
 import {
   IconMenu, IconBell, IconClose, IconHome, IconDumbbell, IconCalendar,
   IconChart, IconUser, IconUsers, IconTag, IconSettings, IconLogout,
@@ -81,20 +81,11 @@ export default function AppChrome({
               </button>
             </div>
 
-            {isClient && (
-              <a className="drawer-link" href="/profile" onClick={() => setOpen(false)}>
-                <IconUser width={19} height={19} /> Il mio profilo
-              </a>
-            )}
-            {!isClient && baseStaff && (
-              <ViewToggle mode="client" className="drawer-link">
-                <IconDumbbell width={19} height={19} /> Allenati
-              </ViewToggle>
-            )}
-            {isClient && baseStaff && (
-              <ViewToggle mode="staff" className="drawer-link">
-                <IconSettings width={19} height={19} /> Torna a gestione
-              </ViewToggle>
+            {baseStaff && (
+              <div style={{ marginBottom: "0.55rem" }}>
+                <div className="section-label" style={{ margin: "0 0 0.4rem 0.2rem" }}>Vista</div>
+                <ViewSwitch current={isClient ? "client" : "staff"} />
+              </div>
             )}
             <a className="drawer-link" href="/settings" onClick={() => setOpen(false)}>
               <IconSettings width={19} height={19} /> Impostazioni
