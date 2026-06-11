@@ -3,8 +3,9 @@ import { headers } from "next/headers";
 import { Archivo, Inter } from "next/font/google";
 import { prisma } from "@/lib/db";
 import { isAppHost } from "@/lib/host";
-import { currentContext, currentClient, clientUpcomingBookings } from "@/lib/gym";
+import { currentContext, currentClient, clientUpcomingBookings, isStaffRole } from "@/lib/gym";
 import ClientChrome from "@/components/ClientChrome";
+import ViewToggle from "@/components/ViewToggle";
 import "./globals.css";
 
 const SOON_MS = 8 * 60 * 60 * 1000;
@@ -35,6 +36,7 @@ interface Brand {
   onApp: boolean;
   loggedIn: boolean;
   role: string | null;
+  baseRole: string | null;
   hasAlerts: boolean;
 }
 
@@ -47,6 +49,7 @@ async function getBrand(): Promise<Brand> {
     onApp: false,
     loggedIn: false,
     role: null,
+    baseRole: null,
     hasAlerts: false,
   };
   try {
@@ -58,7 +61,7 @@ async function getBrand(): Promise<Brand> {
     // Gym branding (logo/theme) is applied ONLY in the client's view. Staff and
     // owners (who may manage several gyms) always see the neutral biggym brand.
     if (!ctx?.gymId || ctx.role !== "client") {
-      return { ...defaults, onApp, loggedIn, role: ctx?.role ?? null };
+      return { ...defaults, onApp, loggedIn, role: ctx?.role ?? null, baseRole: ctx?.baseRole ?? null };
     }
     const [gym, client] = await Promise.all([
       prisma.gym.findUnique({
@@ -68,7 +71,7 @@ async function getBrand(): Promise<Brand> {
       currentClient(),
     ]);
     const hasAlerts = client ? (await clientUpcomingBookings(client.id, SOON_MS)).length > 0 : false;
-    if (!gym) return { ...defaults, onApp, loggedIn, role: "client", hasAlerts };
+    if (!gym) return { ...defaults, onApp, loggedIn, role: "client", baseRole: ctx.baseRole, hasAlerts };
     return {
       appName: gym.appName,
       theme: gym.theme,
@@ -77,6 +80,7 @@ async function getBrand(): Promise<Brand> {
       onApp,
       loggedIn,
       role: "client",
+      baseRole: ctx.baseRole,
       hasAlerts,
     };
   } catch {
@@ -101,7 +105,7 @@ export default async function RootLayout({
     >
       <body className={isClient ? "has-tabbar" : ""}>
         {isClient ? (
-          <ClientChrome hasAlerts={brand.hasAlerts} />
+          <ClientChrome hasAlerts={brand.hasAlerts} canManage={isStaffRole(brand.baseRole)} />
         ) : (
           brand.onApp && (
             <div className="appbar">
@@ -122,9 +126,14 @@ export default async function RootLayout({
                 </span>
               </a>
               {brand.loggedIn ? (
-                <a href="/logout" className="muted" style={{ fontWeight: 600 }}>
-                  Log out
-                </a>
+                <div className="row" style={{ gap: "0.7rem" }}>
+                  {isStaffRole(brand.baseRole) && (
+                    <ViewToggle mode="client" className="ghost btn-sm">Allenati</ViewToggle>
+                  )}
+                  <a href="/logout" className="muted" style={{ fontWeight: 600 }}>
+                    Log out
+                  </a>
+                </div>
               ) : (
                 <a href="/login">
                   <button className="primary" style={{ padding: "0.4rem 1.1rem" }}>

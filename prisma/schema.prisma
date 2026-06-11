@@ -36,7 +36,7 @@ model User {
   accounts    Account[]
   sessions    Session[]
   memberships Membership[]
-  client      Client?
+  clients     Client[]
 
   @@index([email])
 }
@@ -306,7 +306,7 @@ model Client {
   id                String       @id @default(cuid())
   gymId             String
   gym               Gym          @relation(fields: [gymId], references: [id], onDelete: Cascade)
-  userId            String?      @unique
+  userId            String?
   user              User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
   fullName          String
   email             String?
@@ -343,6 +343,9 @@ model Client {
   documents   ClientDocument[]
   bookings    EventBooking[]
 
+  // One client record per user per gym — a user can be a client of several
+  // gyms (and can also be staff of one of them via a separate Membership).
+  @@unique([userId, gymId])
   @@index([gymId])
   @@index([gymId, onboardingStatus])
 }

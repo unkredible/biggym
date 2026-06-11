@@ -19,6 +19,9 @@ export function slugify(input: string): string {
 const STAFF_ROLES = new Set(["super_admin", "gym_admin", "reception", "trainer"]);
 
 export const ACTIVE_GYM_COOKIE = "biggym_gym";
+// "client" makes a staff user browse their own gym as a client (they must have
+// a Client row in the active gym). Anything else = normal staff view.
+export const VIEW_COOKIE = "biggym_view";
 
 export function isSuperEmail(email: string | null | undefined): boolean {
   if (!email) return false;
@@ -33,7 +36,8 @@ export interface Ctx {
   userId: string;
   email: string;
   gymId: string | null;
-  role: string | null; // membership role for the ACTIVE gym
+  role: string | null; // EFFECTIVE role (may be "client" via the view switch)
+  baseRole: string | null; // the real membership role for the ACTIVE gym
   isSuper: boolean; // platform owner (separate from gym role)
   membershipCount: number;
 }
@@ -57,15 +61,30 @@ export async function currentContext(): Promise<Ctx | null> {
   });
 
   const { cookies } = await import("next/headers");
-  const activeId = cookies().get(ACTIVE_GYM_COOKIE)?.value;
+  const jar = cookies();
+  const activeId = jar.get(ACTIVE_GYM_COOKIE)?.value;
   const active =
     memberships.find((m) => m.gymId === activeId) ?? memberships[0] ?? null;
+
+  const baseRole = active?.role ?? null;
+  let role = baseRole;
+
+  // View switch: a staff user who also has a Client row in the active gym can
+  // browse it as a client (cookie biggym_view=client).
+  if (active && baseRole && STAFF_ROLES.has(baseRole) && jar.get(VIEW_COOKIE)?.value === "client") {
+    const asClient = await prisma.client.findFirst({
+      where: { userId, gymId: active.gymId },
+      select: { id: true },
+    });
+    if (asClient) role = "client";
+  }
 
   return {
     userId,
     email,
     gymId: active?.gymId ?? null,
-    role: active?.role ?? null,
+    role,
+    baseRole,
     isSuper: isSuperEmail(email),
     membershipCount: memberships.length,
   };

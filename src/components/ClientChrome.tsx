@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import ViewToggle from "@/components/ViewToggle";
 import {
   IconMenu, IconBell, IconClose, IconHome, IconDumbbell, IconCalendar,
   IconChart, IconUser, IconSettings, IconLogout,
@@ -15,7 +16,13 @@ const TABS = [
   { href: "/profile", label: "Profile", Icon: IconUser },
 ];
 
-export default function ClientChrome({ hasAlerts }: { hasAlerts: boolean }) {
+export default function ClientChrome({
+  hasAlerts,
+  canManage,
+}: {
+  hasAlerts: boolean;
+  canManage: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const path = usePathname() || "";
 
@@ -52,6 +59,11 @@ export default function ClientChrome({ hasAlerts }: { hasAlerts: boolean }) {
             <a className="drawer-link" href="/settings" onClick={() => setOpen(false)}>
               <IconSettings width={19} height={19} /> Impostazioni profilo
             </a>
+            {canManage && (
+              <ViewToggle mode="staff" className="drawer-link" >
+                <IconSettings width={19} height={19} /> Torna a gestione
+              </ViewToggle>
+            )}
             <a className="drawer-link" href="/logout">
               <IconLogout width={19} height={19} /> Esci
             </a>
