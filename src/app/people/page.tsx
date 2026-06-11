@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { IconUsers } from "@/components/icons";
 import { currentContext, isStaffRole } from "@/lib/gym";
 import PeopleManager from "./PeopleManager";
 
@@ -11,10 +12,13 @@ export default async function PeoplePage() {
 
   return (
     <main>
-      <div className="row spread">
-        <h1>People</h1>
+      <div className="section-hero">
+        <span className="sh-ic"><IconUsers width={26} height={26} /></span>
+        <div>
+          <div className="sh-t">Persone</div>
+          <div className="sh-s">Staff e clienti, raggruppati per permesso</div>
+        </div>
       </div>
-      <p className="muted">Staff and clients, grouped by permission.</p>
       <PeopleManager />
     </main>
   );

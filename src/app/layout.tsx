@@ -4,8 +4,7 @@ import { Archivo, Inter } from "next/font/google";
 import { prisma } from "@/lib/db";
 import { isAppHost } from "@/lib/host";
 import { currentContext, currentClient, clientUpcomingBookings, isStaffRole } from "@/lib/gym";
-import ClientChrome from "@/components/ClientChrome";
-import ViewToggle from "@/components/ViewToggle";
+import AppChrome from "@/components/AppChrome";
 import "./globals.css";
 
 const SOON_MS = 8 * 60 * 60 * 1000;
@@ -94,7 +93,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const brand = await getBrand();
-  const isClient = brand.onApp && brand.role === "client";
+  const isAdmin = brand.baseRole === "gym_admin" || brand.baseRole === "super_admin";
+  const inApp = brand.onApp && brand.loggedIn;
 
   return (
     <html
@@ -103,44 +103,29 @@ export default async function RootLayout({
       data-mode={brand.themeMode}
       className={`${display.variable} ${body.variable}`}
     >
-      <body className={isClient ? "has-tabbar" : ""}>
-        {isClient ? (
-          <ClientChrome hasAlerts={brand.hasAlerts} canManage={isStaffRole(brand.baseRole)} />
+      <body className={inApp ? "has-tabbar" : ""}>
+        {inApp ? (
+          <AppChrome
+            role={brand.role}
+            baseStaff={isStaffRole(brand.baseRole)}
+            isAdmin={isAdmin}
+            hasAlerts={brand.hasAlerts}
+          />
         ) : (
           brand.onApp && (
             <div className="appbar">
-              <a href={brand.loggedIn ? "/dashboard" : "/login"} className="brandrow">
+              <a href="/login" className="brandrow">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={brand.loggedIn && brand.logoUrl ? brand.logoUrl : "/brand/logo-mark.webp"}
-                  alt={brand.appName ?? "BIG GYM"}
-                />
+                <img src="/brand/logo-mark.webp" alt="BIG GYM" />
                 <span className="brandname">
-                  {brand.loggedIn && brand.appName ? (
-                    brand.appName
-                  ) : (
-                    <>
-                      BIG <span className="dot">GYM</span>
-                    </>
-                  )}
+                  BIG <span className="dot">GYM</span>
                 </span>
               </a>
-              {brand.loggedIn ? (
-                <div className="row" style={{ gap: "0.7rem" }}>
-                  {isStaffRole(brand.baseRole) && (
-                    <ViewToggle mode="client" className="ghost btn-sm">Allenati</ViewToggle>
-                  )}
-                  <a href="/logout" className="muted" style={{ fontWeight: 600 }}>
-                    Log out
-                  </a>
-                </div>
-              ) : (
-                <a href="/login">
-                  <button className="primary" style={{ padding: "0.4rem 1.1rem" }}>
-                    Log in
-                  </button>
-                </a>
-              )}
+              <a href="/login">
+                <button className="primary" style={{ padding: "0.4rem 1.1rem" }}>
+                  Log in
+                </button>
+              </a>
             </div>
           )
         )}

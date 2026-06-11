@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { IconCalendar } from "@/components/icons";
 import { currentContext } from "@/lib/gym";
 import { prisma } from "@/lib/db";
 import CalendarManager from "./CalendarManager";
@@ -30,10 +31,13 @@ export default async function CalendarPage() {
 
   return (
     <main>
-      <div className="row spread">
-        <h1>Calendar</h1>
+      <div className="section-hero">
+        <span className="sh-ic"><IconCalendar width={26} height={26} /></span>
+        <div>
+          <div className="sh-t">Calendario</div>
+          <div className="sh-s">Crea eventi singoli o ricorrenti per la palestra</div>
+        </div>
       </div>
-      <p className="muted">Create one-off or recurring events for your gym.</p>
       <CalendarManager locations={locations} plans={plans} trainers={trainers} />
     </main>
   );

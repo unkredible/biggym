@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { IconTag } from "@/components/icons";
 import { currentContext } from "@/lib/gym";
 import PlansManager from "./PlansManager";
 
@@ -11,10 +12,13 @@ export default async function PlansPage() {
 
   return (
     <main>
-      <div className="row spread">
-        <h1>Plans</h1>
+      <div className="section-hero">
+        <span className="sh-ic"><IconTag width={26} height={26} /></span>
+        <div>
+          <div className="sh-t">Piani</div>
+          <div className="sh-s">Abbonamenti assegnabili ai clienti; gli eventi possono mirarli</div>
+        </div>
       </div>
-      <p className="muted">Subscription plans clients can be assigned to. Events can target a single plan.</p>
       <PlansManager />
     </main>
   );
