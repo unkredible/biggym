@@ -106,9 +106,24 @@ export default async function PortalHome() {
         <div className="lp-hero-art">
           <span className="blob" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/illustration-hero-lunge.webp" alt="Atleta in allenamento" />
+          <img src="/brand/photos/hero.jpg" alt="Allenamento con i pesi in palestra" />
         </div>
       </section>
+
+      {/* Gallery — real gym shots so it's instantly clear this is fitness */}
+      <div className="lp-gallery">
+        {[
+          { img: "/brand/photos/strength.jpg", t: "Sala pesi" },
+          { img: "/brand/photos/classes.jpg", t: "Classi & corsi" },
+          { img: "/brand/photos/cardio.jpg", t: "Cardio & funzionale" },
+        ].map((g) => (
+          <div className="lp-gphoto" key={g.t}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={g.img} alt={g.t} />
+            <span>{g.t}</span>
+          </div>
+        ))}
+      </div>
 
       {/* Trust strip */}
       <div className="lp-strip">
@@ -233,7 +248,15 @@ export default async function PortalHome() {
       ))}
 
       {/* Final CTA band */}
-      <div className="lp-band">
+      <div
+        className="lp-band"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(7,15,30,0.74), rgba(7,15,30,0.74)), url(/brand/photos/community.jpg)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
         <h2>Porta la tua palestra al livello successivo</h2>
         <p>Crea l&apos;account in pochi minuti. Paga solo quando i clienti confermano.</p>
         <a href="#pricing"><button style={{ background: "var(--lime)", color: "var(--lime-ink)", border: 0, fontWeight: 800 }}>Inizia gratis →</button></a>
