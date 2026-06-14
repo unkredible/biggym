@@ -100,7 +100,7 @@ export default async function RootLayout({
     <html
       lang="en"
       data-theme={brand.theme}
-      data-mode={brand.themeMode}
+      data-mode={brand.onApp ? brand.themeMode : "light"}
       className={`${display.variable} ${body.variable}`}
     >
       <body className={inApp ? "has-tabbar" : ""}>
