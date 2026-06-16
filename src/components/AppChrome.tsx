@@ -1,32 +1,34 @@
 "use client";
 
-import { useState, type ComponentType, type SVGProps } from "react";
+import { type ComponentType, type SVGProps } from "react";
 import { usePathname } from "next/navigation";
 import ViewSwitch from "@/components/ViewSwitch";
+import ThemeToggle from "@/components/ThemeToggle";
 import {
-  IconMenu, IconBell, IconClose, IconHome, IconDumbbell, IconCalendar,
-  IconChart, IconUser, IconUsers, IconTag, IconSettings, IconLogout,
+  IconHome, IconCalendar, IconDoc, IconCard, IconBell, IconSettings,
+  IconUsers, IconTag, IconLogout, IconActivity,
 } from "@/components/icons";
 
 type Ico = ComponentType<SVGProps<SVGSVGElement>>;
 interface Tab { href: string; label: string; Icon: Ico; exact?: boolean; match?: string[] }
 
-const CLIENT_TABS: Tab[] = [
+const CLIENT_NAV: Tab[] = [
   { href: "/dashboard", label: "Dashboard", Icon: IconHome, exact: true },
-  { href: "/my/workouts", label: "Workout", Icon: IconDumbbell },
-  { href: "/my/calendar", label: "Calendar", Icon: IconCalendar },
-  { href: "/progress", label: "Progress", Icon: IconChart },
-  { href: "/profile", label: "Profile", Icon: IconUser },
+  { href: "/my/calendar", label: "Corsi", Icon: IconCalendar },
+  { href: "/my/workouts", label: "Schede", Icon: IconDoc },
+  { href: "/membership", label: "Abbonamento", Icon: IconCard },
+  { href: "/my/notifications", label: "Notifiche", Icon: IconBell },
+  { href: "/settings", label: "Impostazioni", Icon: IconSettings },
 ];
 
-function staffTabs(isAdmin: boolean): Tab[] {
+function staffNav(isAdmin: boolean): Tab[] {
   const t: Tab[] = [
     { href: "/dashboard", label: "Dashboard", Icon: IconHome, exact: true },
-    { href: "/people", label: "Persone", Icon: IconUsers, match: ["/people", "/clients", "/staff"] },
-    { href: "/calendar", label: "Calendar", Icon: IconCalendar },
+    { href: "/calendar", label: "Calendario", Icon: IconCalendar },
+    { href: "/people", label: "Clienti", Icon: IconUsers, match: ["/people", "/clients", "/staff"] },
   ];
-  if (isAdmin) t.push({ href: "/plans", label: "Piani", Icon: IconTag });
-  t.push({ href: "/settings", label: "Profilo", Icon: IconSettings });
+  if (isAdmin) t.push({ href: "/plans", label: "Abbonamenti", Icon: IconTag });
+  t.push({ href: "/settings", label: "Impostazioni", Icon: IconSettings });
   return t;
 }
 
@@ -41,10 +43,11 @@ export default function AppChrome({
   isAdmin: boolean;
   hasAlerts: boolean;
 }) {
-  const [open, setOpen] = useState(false);
   const path = usePathname() || "";
   const isClient = role === "client";
-  const tabs = isClient ? CLIENT_TABS : staffTabs(isAdmin);
+  const nav = isClient ? CLIENT_NAV : staffNav(isAdmin);
+  const mobileNav = nav.slice(0, 4);
+  const current: "staff" | "client" = isClient ? "client" : "staff";
 
   const active = (t: Tab) => {
     if (t.exact) return path === t.href;
@@ -52,53 +55,61 @@ export default function AppChrome({
     return path.startsWith(t.href);
   };
 
+  const Brand = (
+    <a href="/dashboard" className="side-brand" style={{ marginBottom: 0 }}>
+      <span className="side-dot"><i /></span>
+      <span>
+        <span className="eyebrow" style={{ display: "block" }}>GymFlow</span>
+        <span className="brandname" style={{ fontSize: "0.95rem" }}>BIG <span className="dot">GYM</span></span>
+      </span>
+    </a>
+  );
+
   return (
     <>
+      {/* Desktop sidebar */}
+      <aside className="side">
+        <div style={{ marginBottom: "1.5rem" }}>{Brand}</div>
+        <nav className="side-nav">
+          {nav.map((t) => (
+            <a key={t.href} href={t.href} className={`side-link${active(t) ? " on" : ""}`}>
+              <t.Icon width={18} height={18} />
+              <span>{t.label}</span>
+            </a>
+          ))}
+        </nav>
+        <div className="side-foot">
+          {baseStaff && <ViewSwitch current={current} />}
+          <div className="row" style={{ gap: "0.5rem" }}>
+            <ThemeToggle />
+            <a href="/logout" className="iconbtn" aria-label="Esci"><IconLogout /></a>
+            <span className="row" style={{ gap: "0.35rem", marginLeft: "auto", color: "var(--muted)" }}>
+              <IconActivity width={14} height={14} style={{ color: "var(--accent)" }} />
+              <span className="eyebrow">{isClient ? "Membro" : "Back-office"}</span>
+            </span>
+          </div>
+        </div>
+      </aside>
+
+      {/* Mobile top header */}
       <header className="appshell-top">
-        <button className="iconbtn" aria-label="Menu" onClick={() => setOpen(true)}>
-          <IconMenu />
-        </button>
-        <a className="brandname" href="/dashboard" style={{ fontSize: "1rem" }}>
-          BIG <span className="dot">GYM</span>
-        </a>
-        {isClient ? (
-          <a className="iconbtn" aria-label="Notifiche" href="/my/notifications">
-            <IconBell />
-            {hasAlerts && <span className="badge-dot" />}
-          </a>
-        ) : (
-          <span className="iconbtn" aria-hidden style={{ visibility: "hidden" }} />
-        )}
+        {Brand}
+        <div className="row" style={{ gap: "0.45rem" }}>
+          {baseStaff && <ViewSwitch current={current} compact />}
+          <ThemeToggle />
+          {isClient && (
+            <a className="iconbtn" aria-label="Notifiche" href="/my/notifications">
+              <IconBell />
+              {hasAlerts && <span className="badge-dot" />}
+            </a>
+          )}
+          <a className="iconbtn" aria-label="Impostazioni" href="/settings"><IconSettings /></a>
+        </div>
       </header>
 
-      {open && (
-        <div className="drawer" onClick={() => setOpen(false)}>
-          <nav className="drawer-panel" onClick={(e) => e.stopPropagation()}>
-            <div className="row spread" style={{ marginBottom: "1rem" }}>
-              <span className="brandname">BIG <span className="dot">GYM</span></span>
-              <button className="iconbtn" aria-label="Chiudi" onClick={() => setOpen(false)}>
-                <IconClose />
-              </button>
-            </div>
-
-            {baseStaff && (
-              <div style={{ marginBottom: "0.55rem" }}>
-                <div className="section-label" style={{ margin: "0 0 0.4rem 0.2rem" }}>Vista</div>
-                <ViewSwitch current={isClient ? "client" : "staff"} />
-              </div>
-            )}
-            <a className="drawer-link" href="/settings" onClick={() => setOpen(false)}>
-              <IconSettings width={19} height={19} /> Impostazioni
-            </a>
-            <a className="drawer-link" href="/logout">
-              <IconLogout width={19} height={19} /> Esci
-            </a>
-          </nav>
-        </div>
-      )}
-
+      {/* Mobile bottom nav */}
       <nav className="tabbar">
-        {tabs.map((t) => (
+        {mobileNav.map((t) => (
           <a key={t.href} href={t.href} className={`tab${active(t) ? " on" : ""}`}>
             <span className="tab-ic"><t.Icon /></span>
             <span className="tab-lb">{t.label}</span>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
-import { Archivo, Inter } from "next/font/google";
+import { headers, cookies } from "next/headers";
+import { Archivo_Black, Inter, JetBrains_Mono } from "next/font/google";
 import { prisma } from "@/lib/db";
 import { isAppHost } from "@/lib/host";
 import { currentContext, currentClient, clientUpcomingBookings, isStaffRole } from "@/lib/gym";
@@ -9,15 +9,21 @@ import "./globals.css";
 
 const SOON_MS = 8 * 60 * 60 * 1000;
 
-const display = Archivo({
+const display = Archivo_Black({
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["400"],
   variable: "--font-display",
   display: "swap",
 });
 const body = Inter({
   subsets: ["latin"],
   variable: "--font-body",
+  display: "swap",
+});
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-mono",
   display: "swap",
 });
 
@@ -96,12 +102,21 @@ export default async function RootLayout({
   const isAdmin = brand.baseRole === "gym_admin" || brand.baseRole === "super_admin";
   const inApp = brand.onApp && brand.loggedIn;
 
+  // Theme: portal is always light; in the app honour the user's toggle cookie,
+  // falling back to the gym's configured mode.
+  const themeCookie = cookies().get("biggym_mode")?.value;
+  const mode = !brand.onApp
+    ? "light"
+    : themeCookie === "light" || themeCookie === "dark"
+      ? themeCookie
+      : brand.themeMode;
+
   return (
     <html
       lang="en"
       data-theme={brand.theme}
-      data-mode={brand.onApp ? brand.themeMode : "light"}
-      className={`${display.variable} ${body.variable}`}
+      data-mode={mode}
+      className={`${display.variable} ${body.variable} ${mono.variable}`}
     >
       <body className={inApp ? "has-tabbar" : ""}>
         {inApp ? (

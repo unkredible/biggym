@@ -89,6 +89,16 @@ export default async function SettingsPage() {
           </div>
         </div>
       )}
+
+      <div className="section">
+        <div className="list">
+          <a className="list-row" href="/logout">
+            <span className="lr-icon">⎋</span>
+            <span>Esci</span>
+            <span className="lr-value lr-chev">→</span>
+          </a>
+        </div>
+      </div>
     </main>
   );
 }

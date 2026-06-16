@@ -4,7 +4,13 @@ import { useState } from "react";
 
 /** Segmented switch in the menu: flip a staff user between managing the gym
  *  ("Gestione") and using it as a client ("Cliente"). */
-export default function ViewSwitch({ current }: { current: "staff" | "client" }) {
+export default function ViewSwitch({
+  current,
+  compact = false,
+}: {
+  current: "staff" | "client";
+  compact?: boolean;
+}) {
   const [busy, setBusy] = useState(false);
 
   async function go(mode: "staff" | "client") {
@@ -19,12 +25,12 @@ export default function ViewSwitch({ current }: { current: "staff" | "client" })
   }
 
   return (
-    <div className="seg view-switch">
+    <div className={`seg view-switch${compact ? " compact" : ""}`}>
       <button type="button" className={current === "staff" ? "on" : ""} disabled={busy} onClick={() => go("staff")}>
-        Gestione
+        {compact ? "Staff" : "Gestione"}
       </button>
       <button type="button" className={current === "client" ? "on" : ""} disabled={busy} onClick={() => go("client")}>
-        Cliente
+        {compact ? "Utente" : "Cliente"}
       </button>
     </div>
   );

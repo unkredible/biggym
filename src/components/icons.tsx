@@ -116,6 +116,24 @@ export const IconDoc = (p: SVGProps<SVGSVGElement>) => (
     <path d="M14 3.5V8h4.5M9 12.5h6M9 16h6" />
   </svg>
 );
+export const IconCard = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <rect x="3" y="5.5" width="18" height="13" rx="2.5" />
+    <path d="M3 9.5h18M7 14.5h4" />
+  </svg>
+);
+export const IconSun = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+  </svg>
+);
+export const IconMoon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M20 14.5A8 8 0 0 1 9.5 4a7 7 0 1 0 10.5 10.5Z" /></svg>
+);
+export const IconActivity = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M3 12h4l3 8 4-16 3 8h4" /></svg>
+);
 export const IconTrophy = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}>
     <path d="M8 4h8v5a4 4 0 0 1-8 0V4Z" />
